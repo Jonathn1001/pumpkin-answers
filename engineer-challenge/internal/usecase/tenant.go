@@ -3,6 +3,7 @@ package usecase
 
 import (
 	"context"
+	"regexp"
 
 	"claimsplatform/internal/configvalidation"
 	"claimsplatform/internal/domain"
@@ -14,8 +15,16 @@ type Service struct {
 
 func New(repo domain.ConfigurationRepository) *Service { return &Service{repo: repo} }
 
+// slugPattern enforces URL-safe, ref-parser-safe tenant slugs (no '@', '/', spaces).
+var slugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,62}$`)
+
 // CreateTenant starts from the default config, or clones cloneFrom's active config when set.
 func (s *Service) CreateTenant(ctx context.Context, slug, name, cloneFrom string) (domain.Tenant, error) {
+	if !slugPattern.MatchString(slug) {
+		return domain.Tenant{}, domain.ValidationError{Fields: []domain.FieldError{
+			{Field: "slug", Message: "must be 1-63 chars of lowercase letters, digits, or hyphens (no leading hyphen)"},
+		}}
+	}
 	cfg := DefaultDocument()
 	if cloneFrom != "" {
 		src, err := s.repo.GetActiveConfig(ctx, cloneFrom)
