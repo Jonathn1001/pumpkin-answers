@@ -53,5 +53,5 @@ type ClaimDecision struct {
 	Escalation            *Escalation            `json:"escalation,omitempty"`
 	CustomFieldValidation *CustomFieldValidation `json:"customFieldValidation,omitempty"`
 	Trace                 []TraceEntry           `json:"trace"`
-	Extras                map[string]any         `json:"extras,omitempty"` // dimension tương lai
+	Extras                map[string]any         `json:"extras,omitempty"` // reserved for future dimensions
 }

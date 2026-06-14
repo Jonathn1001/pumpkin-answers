@@ -13,7 +13,7 @@ func New() registry.Dimension { return dimension{} }
 
 func init() { registry.Register(New()) }
 
-func (dimension) Key() string { return "approval" }
+func (dimension) Key() string { return registry.KeyApproval }
 
 func (dimension) Evaluate(cfg domain.ConfigDocument, claim domain.Claim, dec *domain.ClaimDecision) {
 	if !dec.Accepted {

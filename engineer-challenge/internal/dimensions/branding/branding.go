@@ -15,7 +15,7 @@ func New() registry.Dimension { return dimension{} }
 
 func init() { registry.Register(New()) }
 
-func (dimension) Key() string { return "branding" }
+func (dimension) Key() string { return registry.KeyBranding }
 
 // Branding does not affect the claim decision.
 func (dimension) Evaluate(_ domain.ConfigDocument, _ domain.Claim, _ *domain.ClaimDecision) {}

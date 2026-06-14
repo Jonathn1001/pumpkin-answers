@@ -14,7 +14,7 @@ func New() registry.Dimension { return dimension{} }
 
 func init() { registry.Register(New()) }
 
-func (dimension) Key() string { return "customFields" }
+func (dimension) Key() string { return registry.KeyCustomFields }
 
 func (dimension) Evaluate(cfg domain.ConfigDocument, claim domain.Claim, dec *domain.ClaimDecision) {
 	if !dec.Accepted {

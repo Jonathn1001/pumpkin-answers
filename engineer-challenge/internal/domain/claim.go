@@ -12,7 +12,7 @@ const (
 	Optical    ClaimType = "OPTICAL"
 )
 
-// AllClaimTypes trả về thứ tự cố định để render/seed (slice mới mỗi lần, tránh mutation từ caller).
+// AllClaimTypes returns the fixed claim-type order used for rendering/seeding (a fresh slice each call so callers cannot mutate it).
 func AllClaimTypes() []ClaimType {
 	return []ClaimType{Outpatient, Inpatient, Dental, Maternity, Optical}
 }
