@@ -1,6 +1,8 @@
 package notifications
 
 import (
+	"strings"
+
 	"claimsplatform/internal/domain"
 	"claimsplatform/internal/registry"
 )
@@ -34,18 +36,7 @@ func (dimension) Evaluate(cfg domain.ConfigDocument, _ domain.Claim, dec *domain
 		dec.Notifications = append(dec.Notifications, domain.NotificationFire{Event: ev, Channels: channels})
 	}
 	dec.Trace = append(dec.Trace, domain.TraceEntry{Dimension: "notifications",
-		Explanation: "fired events: " + joinEvents(events)})
-}
-
-func joinEvents(ev []string) string {
-	out := ""
-	for i, e := range ev {
-		if i > 0 {
-			out += ", "
-		}
-		out += e
-	}
-	return out
+		Explanation: "fired events: " + strings.Join(events, ", ")})
 }
 
 func (dimension) Validate(cfg domain.ConfigDocument) []domain.FieldError {
