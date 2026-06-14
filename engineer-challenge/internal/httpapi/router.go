@@ -53,7 +53,7 @@ func fail(c *gin.Context, err error) {
 	case errors.Is(err, domain.ErrSlugTaken):
 		c.JSON(http.StatusConflict, gin.H{"error": gin.H{"code": "conflict", "message": err.Error()}})
 	default:
-		c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"code": "internal", "message": err.Error()}})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"code": "internal", "message": "internal server error"}})
 	}
 }
 

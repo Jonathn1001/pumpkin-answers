@@ -67,3 +67,12 @@ func TestCreateTenantMissingFieldsReturns400(t *testing.T) {
 		t.Fatalf("expected 400, got %d", w.Code)
 	}
 }
+
+func TestUpdateTenantWithInvalidStatusReturns422(t *testing.T) {
+	r := newTestServer(t)
+	_ = doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"slug": "co", "name": "Co"})
+	w := doJSON(r, http.MethodPatch, "/api/tenants/co", map[string]string{"name": "X", "status": "banana"})
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected 422, got %d %s", w.Code, w.Body)
+	}
+}
