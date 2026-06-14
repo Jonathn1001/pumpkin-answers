@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Card, Empty, Select, Space, Table, Tag, Typography } from 'antd'
 import { useTenants, useProcess } from '../api/hooks'
 import { ClaimForm } from '../components/ClaimForm'
 import { DecisionView } from '../components/DecisionView'
@@ -6,27 +7,25 @@ import type { Claim, ClaimDecision } from '../api/types'
 
 type Run = { id: number; slug: string; claim: Claim; decision: ClaimDecision }
 
-function outcomeLabel(d: ClaimDecision): string {
-  if (!d.accepted) return 'rejected'
-  if (d.approval?.outcome === 'auto_approved') return 'auto-approved'
-  if (d.approval?.outcome === 'routed') {
-    const r = d.approval.route
-    return `routed → ${r?.committeeName ?? r?.tierLabel ?? r?.approverRole ?? ''}`
-  }
-  return 'accepted'
+function outcomeTag(d: ClaimDecision) {
+  if (!d.accepted) return <Tag color="red">rejected</Tag>
+  if (d.approval?.outcome === 'auto_approved') return <Tag color="green">auto-approved</Tag>
+  const r = d.approval?.route
+  return <Tag color="blue">routed → {r?.committeeName ?? r?.tierLabel ?? r?.approverRole ?? ''}</Tag>
 }
 
 // Runtime runs sample claims against a tenant's active config. Live-only: results
 // are kept in session state, not persisted.
 export function Runtime() {
   const { data: tenants } = useTenants()
-  const [slug, setSlug] = useState('')
-  const process = useProcess(slug)
+  const [slug, setSlug] = useState<string>()
+  const process = useProcess(slug ?? '')
   const [runs, setRuns] = useState<Run[]>([])
   const [selected, setSelected] = useState<number | null>(null)
   const [nextId, setNextId] = useState(1)
 
   function run(claim: Claim) {
+    if (!slug) return
     process.mutate(claim, {
       onSuccess: (decision) => {
         const id = nextId
@@ -40,67 +39,60 @@ export function Runtime() {
   const detail = runs.find((r) => r.id === selected)
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Runtime — process a claim</h2>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-3 rounded-lg border bg-white p-4">
-          <label className="block text-sm">
-            <span className="text-gray-600">Tenant</span>
-            <select className="mt-1 w-full rounded border px-2 py-1" value={slug} onChange={(e) => setSlug(e.target.value)}>
-              <option value="">Select a tenant…</option>
-              {tenants?.map((t) => (
-                <option key={t.slug} value={t.slug}>{t.name} ({t.slug})</option>
-              ))}
-            </select>
-          </label>
-          {slug ? (
-            <ClaimForm onSubmit={run} />
-          ) : (
-            <p className="text-sm text-gray-500">Pick a tenant to run a claim against its active config.</p>
-          )}
-          {process.isError && <p className="text-sm text-red-600">Failed to process claim.</p>}
-        </div>
-
-        <div className="rounded-lg border bg-white p-4">
+    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      <Typography.Title level={3} style={{ margin: 0 }}>
+        Runtime — process a claim
+      </Typography.Title>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <Card size="small" title="Claim input">
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Select
+              placeholder="Select a tenant…"
+              style={{ width: '100%' }}
+              value={slug}
+              onChange={setSlug}
+              options={(tenants ?? []).map((t) => ({ value: t.slug, label: `${t.name} (${t.slug})` }))}
+            />
+            {slug ? (
+              <ClaimForm onSubmit={run} submitText="Process claim" />
+            ) : (
+              <Typography.Text type="secondary">Pick a tenant to run a claim against its active config.</Typography.Text>
+            )}
+            {process.isError && <Typography.Text type="danger">Failed to process claim.</Typography.Text>}
+          </Space>
+        </Card>
+        <Card size="small" title="Processing result">
           {detail ? (
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Typography.Text type="secondary">
                 {detail.slug} · {detail.claim.type} · {detail.claim.amount}
-              </p>
+              </Typography.Text>
               <DecisionView d={detail.decision} />
-            </div>
+            </Space>
           ) : (
-            <p className="text-sm text-gray-500">Run a claim to see the processing result.</p>
+            <Empty description="Run a claim to see the result." image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
-        </div>
+        </Card>
       </div>
-
       {runs.length > 0 && (
-        <div className="overflow-hidden rounded-lg border bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="p-2">#</th><th>Tenant</th><th>Type</th><th>Amount</th><th>Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r) => (
-                <tr
-                  key={r.id}
-                  className={`cursor-pointer border-b hover:bg-gray-50 ${r.id === selected ? 'bg-blue-50' : ''}`}
-                  onClick={() => setSelected(r.id)}
-                >
-                  <td className="p-2">{r.id}</td>
-                  <td>{r.slug}</td>
-                  <td>{r.claim.type}</td>
-                  <td>{r.claim.amount}</td>
-                  <td>{outcomeLabel(r.decision)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card size="small" title="Processing log (this session)">
+          <Table
+            rowKey="id"
+            size="small"
+            pagination={false}
+            dataSource={runs}
+            onRow={(r) => ({ onClick: () => setSelected(r.id), style: { cursor: 'pointer' } })}
+            rowClassName={(r) => (r.id === selected ? 'ant-table-row-selected' : '')}
+            columns={[
+              { title: '#', dataIndex: 'id', width: 60 },
+              { title: 'Tenant', dataIndex: 'slug' },
+              { title: 'Type', render: (_, r) => r.claim.type },
+              { title: 'Amount', render: (_, r) => r.claim.amount },
+              { title: 'Outcome', render: (_, r) => outcomeTag(r.decision) },
+            ]}
+          />
+        </Card>
       )}
-    </div>
+    </Space>
   )
 }
