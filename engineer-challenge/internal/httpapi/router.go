@@ -23,6 +23,10 @@ func NewRouter(svc *usecase.Service) *gin.Engine {
 	// Deployments behind a known LB can set trusted CIDRs explicitly.
 	_ = r.SetTrustedProxies(nil)
 	r.Use(requestLogger(slog.Default()), gin.Recovery(), bodyLimit)
+
+	// Liveness probe for container/platform healthchecks (Railway healthcheckPath).
+	r.GET("/healthz", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "ok"}) })
+
 	h := &handlers{svc: svc}
 
 	api := r.Group("/api")

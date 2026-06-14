@@ -15,6 +15,11 @@ func requestLogger(logger *slog.Logger) gin.HandlerFunc {
 		start := time.Now()
 		c.Next()
 
+		// Health probes hit on a fixed interval; logging them buries real traffic.
+		if c.Request.URL.Path == "/healthz" {
+			return
+		}
+
 		status := c.Writer.Status()
 		attrs := []any{
 			slog.String("method", c.Request.Method),

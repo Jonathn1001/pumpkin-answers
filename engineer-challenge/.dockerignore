@@ -1,0 +1,20 @@
+# VCS & local tooling
+.git
+.gitignore
+.claude
+.playwright-mcp
+
+# Node deps and build outputs (deps are reinstalled in the web stage)
+**/node_modules
+apps/web/dist
+apps/web/test-results
+apps/web/playwright-report
+
+# Go build output
+bin/
+
+# Locally-staged SPA — the image gets a fresh copy from the web stage instead
+cmd/server/dist
+
+# Docs not needed inside the build
+*.md
