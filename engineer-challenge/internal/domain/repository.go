@@ -12,7 +12,7 @@ type ConfigurationRepository interface {
 
 	CreateDraft(ctx context.Context, slug string, cfg ConfigDocument, note, by string) (ConfigVersion, error)
 	Publish(ctx context.Context, slug string, version int) error
-	Rollback(ctx context.Context, slug string, targetVersion int) (ConfigVersion, error)
+	Rollback(ctx context.Context, slug string, targetVersion int, by string) (ConfigVersion, error)
 
 	ListVersions(ctx context.Context, slug string) ([]ConfigVersion, error)
 	GetVersion(ctx context.Context, slug string, version int) (ConfigVersion, error)

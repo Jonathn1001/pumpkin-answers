@@ -174,7 +174,7 @@ func (r *repo) Publish(ctx context.Context, slug string, version int) error {
 	})
 }
 
-func (r *repo) Rollback(ctx context.Context, slug string, targetVersion int) (domain.ConfigVersion, error) {
+func (r *repo) Rollback(ctx context.Context, slug string, targetVersion int, by string) (domain.ConfigVersion, error) {
 	var clone configVersionModel
 	var doc domain.ConfigDocument
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -195,7 +195,7 @@ func (r *repo) Rollback(ctx context.Context, slug string, targetVersion int) (do
 			return err
 		}
 		clone = configVersionModel{TenantID: tid, VersionNumber: next, Status: domain.VersionPublished,
-			Note: "rollback to v" + strconv.Itoa(targetVersion), Config: target.Config}
+			Note: "rollback to v" + strconv.Itoa(targetVersion), CreatedBy: by, Config: target.Config}
 		if err := tx.Create(&clone).Error; err != nil {
 			return err
 		}

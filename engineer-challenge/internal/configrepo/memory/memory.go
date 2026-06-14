@@ -118,7 +118,7 @@ func (r *Repo) Publish(_ context.Context, slug string, version int) error {
 	return nil
 }
 
-func (r *Repo) Rollback(_ context.Context, slug string, targetVersion int) (domain.ConfigVersion, error) {
+func (r *Repo) Rollback(_ context.Context, slug string, targetVersion int, by string) (domain.ConfigVersion, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	rec, err := r.get(slug)
@@ -135,6 +135,7 @@ func (r *Repo) Rollback(_ context.Context, slug string, targetVersion int) (doma
 		VersionNumber: newNum,
 		Status:        domain.VersionPublished,
 		Note:          "rollback to v" + strconv.Itoa(targetVersion),
+		CreatedBy:     by,
 		Config:        rec.versions[idx].Config,
 		CreatedAt:     time.Now().UTC(),
 	}

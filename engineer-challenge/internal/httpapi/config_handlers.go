@@ -90,7 +90,7 @@ func (h *handlers) rollback(c *gin.Context) {
 		badRequest(c, err)
 		return
 	}
-	v, err := h.svc.RollbackVersion(c.Request.Context(), c.Param("slug"), req.TargetVersion)
+	v, err := h.svc.RollbackVersion(c.Request.Context(), c.Param("slug"), req.TargetVersion, actor(c))
 	if err != nil {
 		fail(c, err)
 		return

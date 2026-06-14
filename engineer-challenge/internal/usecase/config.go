@@ -19,8 +19,8 @@ func (s *Service) PublishVersion(ctx context.Context, slug string, version int) 
 	return s.repo.Publish(ctx, slug, version)
 }
 
-func (s *Service) RollbackVersion(ctx context.Context, slug string, targetVersion int) (domain.ConfigVersion, error) {
-	return s.repo.Rollback(ctx, slug, targetVersion)
+func (s *Service) RollbackVersion(ctx context.Context, slug string, targetVersion int, by string) (domain.ConfigVersion, error) {
+	return s.repo.Rollback(ctx, slug, targetVersion, by)
 }
 
 func (s *Service) ListVersions(ctx context.Context, slug string) ([]domain.ConfigVersion, error) {

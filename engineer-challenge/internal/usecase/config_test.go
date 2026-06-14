@@ -47,8 +47,12 @@ func TestRollbackRestoresOldConfig(t *testing.T) {
 	_, _ = svc.CreateTenant(ctx, "co", "Co", "") // v1 default
 	v2, _ := svc.SaveDraftConfig(ctx, "co", seed.GovHealth(), "gov", "tester")
 	_ = svc.PublishVersion(ctx, "co", v2.VersionNumber)
-	if _, err := svc.RollbackVersion(ctx, "co", 1); err != nil {
+	rolled, err := svc.RollbackVersion(ctx, "co", 1, "tester")
+	if err != nil {
 		t.Fatal(err)
+	}
+	if rolled.CreatedBy != "tester" {
+		t.Fatalf("rollback version must record the actor, got %q", rolled.CreatedBy)
 	}
 	cfg, _ := svc.GetActiveConfig(ctx, "co")
 	if cfg.Approval.Model == seed.GovHealth().Approval.Model {

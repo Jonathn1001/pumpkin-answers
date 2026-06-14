@@ -98,12 +98,15 @@ func Contract(t *testing.T, newRepo func(t *testing.T) domain.ConfigurationRepos
 		ctx := context.Background()
 		_, _ = repo.CreateDraft(ctx, "gv", seed.GovHealth(), "gov", "tester") // v2
 		_ = repo.Publish(ctx, "gv", 2)
-		newV, err := repo.Rollback(ctx, "gv", 1) // back to SafeGuard rules
+		newV, err := repo.Rollback(ctx, "gv", 1, "tester") // back to SafeGuard rules
 		if err != nil {
 			t.Fatal(err)
 		}
 		if newV.VersionNumber != 3 {
 			t.Fatalf("rollback should create v3, got %d", newV.VersionNumber)
+		}
+		if newV.CreatedBy != "tester" {
+			t.Fatalf("rollback version must record the actor, got %q", newV.CreatedBy)
 		}
 		cfg, _ := repo.GetActiveConfig(ctx, "gv")
 		if cfg.Approval.Model != seed.SafeGuard().Approval.Model {
