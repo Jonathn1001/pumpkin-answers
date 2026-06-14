@@ -19,7 +19,7 @@ func TestDefaultDocumentIsValid(t *testing.T) {
 
 func TestCreateTenantStartsFromValidDefault(t *testing.T) {
 	svc := usecase.New(memory.New())
-	tn, err := svc.CreateTenant(context.Background(), "New Co", "")
+	tn, err := svc.CreateTenant(context.Background(), "New Co", usecase.DefaultDocument())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestCreateTenantStartsFromValidDefault(t *testing.T) {
 func TestUpdateTenantRejectsInvalidStatus(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	if _, err := svc.CreateTenant(ctx, "Co", ""); err != nil {
+	if _, err := svc.CreateTenant(ctx, "Co", usecase.DefaultDocument()); err != nil {
 		t.Fatal(err)
 	}
 	_, err := svc.UpdateTenant(ctx, "co", "New", "banana")
@@ -44,7 +44,7 @@ func TestUpdateTenantRejectsInvalidStatus(t *testing.T) {
 func TestUpdateTenantAcceptsArchivedStatus(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	if _, err := svc.CreateTenant(ctx, "Co", ""); err != nil {
+	if _, err := svc.CreateTenant(ctx, "Co", usecase.DefaultDocument()); err != nil {
 		t.Fatal(err)
 	}
 	tn, err := svc.UpdateTenant(ctx, "co", "Co", domain.TenantArchived)
@@ -58,7 +58,7 @@ func TestUpdateTenantAcceptsArchivedStatus(t *testing.T) {
 
 func TestCreateTenantDerivesSlugFromName(t *testing.T) {
 	svc := usecase.New(memory.New())
-	tn, err := svc.CreateTenant(context.Background(), "SafeGuard Insurance", "")
+	tn, err := svc.CreateTenant(context.Background(), "SafeGuard Insurance", usecase.DefaultDocument())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,10 +70,10 @@ func TestCreateTenantDerivesSlugFromName(t *testing.T) {
 func TestCreateTenantAutoSuffixesDuplicateDerivedSlug(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	if _, err := svc.CreateTenant(ctx, "Acme", ""); err != nil {
+	if _, err := svc.CreateTenant(ctx, "Acme", usecase.DefaultDocument()); err != nil {
 		t.Fatal(err)
 	}
-	tn, err := svc.CreateTenant(ctx, "Acme", "")
+	tn, err := svc.CreateTenant(ctx, "Acme", usecase.DefaultDocument())
 	if err != nil {
 		t.Fatalf("second create should auto-suffix, got %v", err)
 	}
@@ -84,7 +84,7 @@ func TestCreateTenantAutoSuffixesDuplicateDerivedSlug(t *testing.T) {
 
 func TestCreateTenantRejectsNameWithNoSlugChars(t *testing.T) {
 	svc := usecase.New(memory.New())
-	_, err := svc.CreateTenant(context.Background(), "@@@", "")
+	_, err := svc.CreateTenant(context.Background(), "@@@", usecase.DefaultDocument())
 	var ve domain.ValidationError
 	if !errors.As(err, &ve) {
 		t.Fatalf("expected ValidationError, got %v", err)
@@ -94,18 +94,29 @@ func TestCreateTenantRejectsNameWithNoSlugChars(t *testing.T) {
 	}
 }
 
-func TestCreateTenantCloneCopiesSourceConfig(t *testing.T) {
+// The client sends the full config; create persists it verbatim as v1.
+func TestCreateTenantUsesProvidedConfig(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	if _, err := svc.CreateTenant(ctx, "Source", ""); err != nil {
+	cfg := usecase.DefaultDocument()
+	cfg.Branding.DisplayName = "Provided Brand"
+	if _, err := svc.CreateTenant(ctx, "Provided Co", cfg); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := svc.CreateTenant(ctx, "Clone", "source"); err != nil {
-		t.Fatal(err)
+	got, _ := svc.GetActiveConfig(ctx, "provided-co")
+	if got.Branding.DisplayName != "Provided Brand" {
+		t.Fatalf("create should persist the provided config, got displayName %q", got.Branding.DisplayName)
 	}
-	a, _ := svc.GetActiveConfig(ctx, "source")
-	b, _ := svc.GetActiveConfig(ctx, "clone")
-	if a.Approval.Model != b.Approval.Model {
-		t.Fatal("clone should copy source config")
+}
+
+// An invalid client config is rejected before any tenant is written.
+func TestCreateTenantRejectsInvalidConfig(t *testing.T) {
+	svc := usecase.New(memory.New())
+	bad := usecase.DefaultDocument()
+	bad.Branding.DisplayName = "" // branding.displayName is required
+	_, err := svc.CreateTenant(context.Background(), "Bad Co", bad)
+	var ve domain.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected ValidationError for invalid config, got %v", err)
 	}
 }

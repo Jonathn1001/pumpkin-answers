@@ -61,7 +61,15 @@ export function ColorInput(p: WidgetProps) {
   return (
     <div>
       <FieldLabel p={p} />
-      <ColorPicker value={(p.value as string) || '#000000'} onChange={(_, hex) => p.onChange(hex)} showText />
+      <ColorPicker
+        value={(p.value as string) || '#000000'}
+        // Always store #RRGGBB: the onChange `css` arg follows the picker's display
+        // format (rgb/hsb), so derive hex from the Color object instead. disabledAlpha
+        // keeps it to 6 digits (no #RRGGBBAA), matching the backend's hex validation.
+        onChange={(color) => p.onChange(color.toHexString())}
+        showText
+        disabledAlpha
+      />
     </div>
   )
 }

@@ -3,7 +3,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -12,14 +12,22 @@ import (
 	"claimsplatform/internal/seed"
 	"claimsplatform/internal/usecase"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func main() {
+	setupLogger()
+	// Default to release mode so Gin's [GIN-debug] noise stays out of structured
+	// logs; set GIN_MODE=debug locally to opt back in.
+	if os.Getenv("GIN_MODE") == "" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		log.Fatal("DATABASE_URL is required")
+		fatal("DATABASE_URL is required")
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -27,16 +35,16 @@ func main() {
 	}
 
 	if err := configrepo.Migrate(dbURL); err != nil {
-		log.Fatalf("migrate: %v", err)
+		fatal("migrate failed", "err", err)
 	}
 
 	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("db open: %v", err) // never log dbURL (contains secret)
+		fatal("db open failed", "err", err) // never log dbURL (contains secret)
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatalf("db handle: %v", err)
+		fatal("db handle failed", "err", err)
 	}
 	sqlDB.SetMaxOpenConns(10)
 	sqlDB.SetMaxIdleConns(5)
@@ -45,12 +53,29 @@ func main() {
 
 	repo := configrepo.New(db)
 	if err := seed.SeedAll(context.Background(), repo); err != nil {
-		log.Fatalf("seed: %v", err)
+		fatal("seed failed", "err", err)
 	}
 
 	svc := usecase.New(repo)
-	log.Printf("API listening on :%s", port)
+	slog.Info("api listening", "port", port)
 	if err := httpapi.NewRouter(svc).Run(":" + port); err != nil {
-		log.Fatalf("server: %v", err)
+		fatal("server failed", "err", err)
 	}
+}
+
+// setupLogger installs the process-wide slog logger. Defaults to a human-readable
+// text handler; set LOG_FORMAT=json for machine-parseable output in production.
+func setupLogger() {
+	opts := &slog.HandlerOptions{Level: slog.LevelInfo}
+	var h slog.Handler = slog.NewTextHandler(os.Stdout, opts)
+	if os.Getenv("LOG_FORMAT") == "json" {
+		h = slog.NewJSONHandler(os.Stdout, opts)
+	}
+	slog.SetDefault(slog.New(h))
+}
+
+// fatal logs an error and exits non-zero (slog has no Fatal; this mirrors log.Fatal).
+func fatal(msg string, args ...any) {
+	slog.Error(msg, args...)
+	os.Exit(1)
 }

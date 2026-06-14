@@ -44,11 +44,10 @@ export const useConfigSchema = () =>
     queryFn: () => request<ConfigSchemaResponse>("GET", "/config-schema"),
     staleTime: Infinity,
   });
-
 export function useCreateTenant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (b: { name: string; cloneFrom?: string }) =>
+    mutationFn: (b: { name: string; config?: ConfigDocument }) =>
       request<Tenant>("POST", "/tenants", b),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.tenants }),
   });

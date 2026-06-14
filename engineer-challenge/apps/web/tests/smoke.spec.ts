@@ -43,18 +43,49 @@ test('config diff shows differences between two tenants', async ({ page }) => {
   await expect(page.getByText('changed').or(page.getByText('added')).first()).toBeVisible()
 })
 
-test('zero-code 4th tenant onboarding via the create wizard', async ({ page }) => {
+test('zero-code 4th tenant onboarding via the full create page', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create Tenant' }).click()
-  const dialog = page.getByRole('dialog')
-  await dialog.getByPlaceholder('e.g. SafeGuard Insurance').fill('Demo Four')
-  await dialog.getByRole('button', { name: 'Next' }).click()
-  await dialog.getByRole('button', { name: 'Create Tenant' }).click()
+  // The create flow now lives on its own route, not a modal.
+  await expect(page).toHaveURL(/\/tenants\/new$/)
+  await page.getByPlaceholder('e.g. SafeGuard Insurance').fill('Demo Four')
+  // Basics → seed the default config → first dimension step.
+  await page.getByRole('button', { name: 'Next' }).click()
+  // Step through the six dimension steps (Branding … Custom Fields) to Review.
+  for (let i = 0; i < 6; i++) {
+    await page.getByRole('button', { name: 'Next' }).click()
+  }
+  await page.getByRole('button', { name: 'Create Tenant' }).click()
   await expect(page.getByText('Tenant Created Successfully!')).toBeVisible()
-  await dialog.getByRole('button', { name: 'Go to Tenant' }).click()
+  await page.getByRole('button', { name: 'Go to Tenant' }).click()
+  await expect(page).toHaveURL(/\/t\/demo-four/)
+  const slug = new URL(page.url()).pathname.split('/').pop()!
   await page.getByRole('tab', { name: 'Preview' }).click()
   await page.getByRole('button', { name: 'Run preview' }).click()
   await expect(page.getByText('Required documents')).toBeVisible()
+  // Clean up so repeated runs don't accumulate tenants (archive = soft delete).
+  await page.request.patch(`/api/tenants/${slug}`, { data: { name: 'Demo Four', status: 'archived' } })
+})
+
+test('editing a tenant publishes a new version; Save enables only on change', async ({ page }) => {
+  await page.goto('/t/safeguard')
+  await page.getByRole('button', { name: 'Edit configuration' }).click()
+  await expect(page).toHaveURL(/\/tenants\/safeguard\/edit$/)
+
+  // Save sits above the stepper and is disabled until the config changes.
+  const save = page.getByRole('button', { name: 'Save & Publish' })
+  await expect(save).toBeDisabled()
+
+  // Toggle a cosmetic branding field so the change is dirty on every run.
+  const field = page.getByRole('textbox').first()
+  const cur = await field.inputValue()
+  await field.fill(cur.endsWith(' *') ? cur.slice(0, -2) : cur + ' *')
+  await expect(save).toBeEnabled()
+
+  await save.click()
+  await expect(page.getByText(/Published v\d+/)).toBeVisible()
+  // Baseline resets after publish → Save disables again.
+  await expect(save).toBeDisabled()
 })
 
 test('runtime processes a claim against a tenant active config', async ({ page }) => {
@@ -64,11 +95,23 @@ test('runtime processes a claim against a tenant active config', async ({ page }
   await expect(page.getByText('auto-approved', { exact: true }).first()).toBeVisible()
 })
 
-test('archiving a tenant flips its status, and it can be reactivated', async ({ page }) => {
+test('deleting a tenant hides it from the list, then it can be restored', async ({ page }) => {
   await page.goto('/')
-  const row = page.getByRole('row', { name: /SafeGuard Insurance/ })
-  await row.getByRole('button', { name: 'Archive' }).click()
-  await expect(row.getByText('archived')).toBeVisible()
-  await row.getByRole('button', { name: 'Activate' }).click()
-  await expect(row.getByText('active', { exact: true })).toBeVisible()
+  await page
+    .getByRole('row', { name: /SafeGuard Insurance/ })
+    .getByRole('button', { name: 'Delete' })
+    .click()
+  // Toast + table reload happen only after the server confirms the delete.
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
+  await expect(page.getByRole('link', { name: 'SafeGuard Insurance' })).toHaveCount(0)
+
+  // It moves to the Archived view, where it can be restored.
+  await page.getByText('Archived', { exact: true }).click()
+  await page
+    .getByRole('row', { name: /SafeGuard Insurance/ })
+    .getByRole('button', { name: 'Restore' })
+    .click()
+
+  await page.getByText('Active', { exact: true }).click()
+  await expect(page.getByRole('link', { name: 'SafeGuard Insurance' })).toBeVisible()
 })

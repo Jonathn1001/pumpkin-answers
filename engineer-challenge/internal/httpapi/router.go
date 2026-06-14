@@ -4,6 +4,7 @@ package httpapi
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"claimsplatform/internal/domain"
@@ -17,13 +18,18 @@ type handlers struct{ svc *usecase.Service }
 // NewRouter wires all /api routes onto a fresh Gin engine.
 func NewRouter(svc *usecase.Service) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Recovery(), bodyLimit)
+	// Don't trust proxy headers (X-Forwarded-For/X-Real-IP) by default: client_ip
+	// in logs stays honest, and this silences Gin's "trusted all proxies" warning.
+	// Deployments behind a known LB can set trusted CIDRs explicitly.
+	_ = r.SetTrustedProxies(nil)
+	r.Use(requestLogger(slog.Default()), gin.Recovery(), bodyLimit)
 	h := &handlers{svc: svc}
 
 	api := r.Group("/api")
 	api.GET("/tenants", h.listTenants)
 	api.POST("/tenants", h.createTenant)
 	api.GET("/config-schema", h.configSchema)
+	api.GET("/config-default", h.configDefault)
 	api.GET("/diff", h.diff)
 
 	tg := api.Group("/tenants/:slug")

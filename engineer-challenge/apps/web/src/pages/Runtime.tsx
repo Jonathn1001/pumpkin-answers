@@ -51,7 +51,9 @@ export function Runtime() {
               style={{ width: '100%' }}
               value={slug}
               onChange={setSlug}
-              options={(tenants ?? []).map((t) => ({ value: t.slug, label: `${t.name} (${t.slug})` }))}
+              options={(tenants ?? [])
+                .filter((t) => t.status === 'active')
+                .map((t) => ({ value: t.slug, label: `${t.name} (${t.slug})` }))}
             />
             {slug ? (
               <ClaimForm onSubmit={run} submitText="Process claim" />

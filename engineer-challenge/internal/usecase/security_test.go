@@ -18,7 +18,7 @@ func TestDerivedSlugIsAlwaysRefSafe(t *testing.T) {
 	for _, name := range []string{
 		"Bad Slug!", "has@at", "../etc/passwd", "with/slash", "a b@c", "DROP TABLE tenants;",
 	} {
-		tn, err := svc.CreateTenant(context.Background(), name, "")
+		tn, err := svc.CreateTenant(context.Background(), name, usecase.DefaultDocument())
 		if err != nil {
 			t.Fatalf("name %q: unexpected error %v", name, err)
 		}

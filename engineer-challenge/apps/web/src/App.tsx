@@ -3,6 +3,8 @@ import { Layout, Menu, Typography } from 'antd'
 import { TeamOutlined, ThunderboltOutlined, DiffOutlined } from '@ant-design/icons'
 import { TenantList } from './pages/TenantList'
 import { TenantDetail } from './pages/TenantDetail'
+import { CreateTenant } from './pages/CreateTenant'
+import { EditTenant } from './pages/EditTenant'
 import { Compare } from './pages/Compare'
 import { Runtime } from './pages/Runtime'
 
@@ -17,8 +19,8 @@ const NAV = [
 export default function App() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  // /t/:slug detail pages belong under the Tenants section.
-  const selectedKey = pathname.startsWith('/t/')
+  // /t/:slug detail and /tenants/* pages belong under the Tenants section.
+  const selectedKey = pathname.startsWith('/t/') || pathname.startsWith('/tenants')
     ? '/'
     : NAV.map((n) => n.key).find((k) => (k === '/' ? pathname === '/' : pathname.startsWith(k))) ?? '/'
 
@@ -56,6 +58,8 @@ export default function App() {
         <Content style={{ margin: 24 }}>
           <Routes>
             <Route path="/" element={<TenantList />} />
+            <Route path="/tenants/new" element={<CreateTenant />} />
+            <Route path="/tenants/:slug/edit" element={<EditTenant />} />
             <Route path="/t/:slug" element={<TenantDetail />} />
             <Route path="/runtime" element={<Runtime />} />
             <Route path="/compare" element={<Compare />} />

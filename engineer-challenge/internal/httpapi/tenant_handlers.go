@@ -3,13 +3,17 @@ package httpapi
 import (
 	"net/http"
 
+	"claimsplatform/internal/domain"
 	"claimsplatform/internal/tenantcontext"
 	"github.com/gin-gonic/gin"
 )
 
+// createTenantReq carries the full starter config from the client. config is
+// optional: when omitted, the server seeds the tenant from DefaultConfig().
+// The slug is always derived server-side from name (never client-supplied).
 type createTenantReq struct {
-	Name      string `json:"name" binding:"required"`
-	CloneFrom string `json:"cloneFrom"`
+	Name   string                 `json:"name" binding:"required"`
+	Config *domain.ConfigDocument `json:"config"`
 }
 
 func (h *handlers) createTenant(c *gin.Context) {
@@ -18,12 +22,22 @@ func (h *handlers) createTenant(c *gin.Context) {
 		badRequest(c, err)
 		return
 	}
-	tn, err := h.svc.CreateTenant(c.Request.Context(), req.Name, req.CloneFrom)
+	cfg := h.svc.DefaultConfig()
+	if req.Config != nil {
+		cfg = *req.Config
+	}
+	tn, err := h.svc.CreateTenant(c.Request.Context(), req.Name, cfg)
 	if err != nil {
 		fail(c, err)
 		return
 	}
 	c.JSON(http.StatusCreated, tn)
+}
+
+// configDefault returns the starter config the create wizard edits when the
+// user picks the "default" source.
+func (h *handlers) configDefault(c *gin.Context) {
+	c.JSON(http.StatusOK, h.svc.DefaultConfig())
 }
 
 func (h *handlers) listTenants(c *gin.Context) {

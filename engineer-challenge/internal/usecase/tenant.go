@@ -19,32 +19,30 @@ type Service struct {
 func New(repo domain.ConfigurationRepository) *Service { return &Service{repo: repo} }
 
 // CreateTenant derives a server-authoritative slug from name (slugs are never
-// client-supplied). It starts from the default config, or clones cloneFrom's
-// active config when set.
-func (s *Service) CreateTenant(ctx context.Context, name, cloneFrom string) (domain.Tenant, error) {
+// client-supplied) and persists cfg as the tenant's first published version.
+// The client sends the full config; an invalid one is rejected before any write.
+// Seeding the starting config (default or cloned) is the caller's concern — the
+// HTTP layer fills in DefaultConfig() when the client omits it.
+func (s *Service) CreateTenant(ctx context.Context, name string, cfg domain.ConfigDocument) (domain.Tenant, error) {
 	base := slug.Make(name)
 	if base == "" {
 		return domain.Tenant{}, domain.ValidationError{Fields: []domain.FieldError{
 			{Field: "name", Message: "must contain at least one letter or digit to derive a slug"},
 		}}
 	}
+	if errs := configvalidation.Validate(cfg); len(errs) > 0 {
+		return domain.Tenant{}, domain.ValidationError{Fields: errs}
+	}
 	tenantSlug, err := s.uniqueSlug(ctx, base)
 	if err != nil {
 		return domain.Tenant{}, err
 	}
-	cfg := DefaultDocument()
-	if cloneFrom != "" {
-		src, err := s.repo.GetActiveConfig(ctx, cloneFrom)
-		if err != nil {
-			return domain.Tenant{}, err
-		}
-		cfg = src
-	}
-	if errs := configvalidation.Validate(cfg); len(errs) > 0 {
-		return domain.Tenant{}, domain.ValidationError{Fields: errs}
-	}
 	return s.repo.CreateTenant(ctx, domain.Tenant{Slug: tenantSlug, Name: name, Status: domain.TenantActive}, cfg)
 }
+
+// DefaultConfig is the starter config for a brand-new tenant — the create
+// wizard's "default" source, also used when a create request omits config.
+func (s *Service) DefaultConfig() domain.ConfigDocument { return DefaultDocument() }
 
 // uniqueSlug appends -2, -3, … until the slug is free, keeping within 63 chars.
 func (s *Service) uniqueSlug(ctx context.Context, base string) (string, error) {

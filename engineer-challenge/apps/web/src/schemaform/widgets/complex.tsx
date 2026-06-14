@@ -3,6 +3,7 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import type { WidgetProps } from './types'
 import type { ApprovalTier, ClaimTypeConfig, Committee, CustomFieldConfig, Escalation } from '../../api/types'
 import { FieldLabel } from './base'
+import { eventLabel } from '../../labels'
 
 const CLAIM_TYPES = ['OUTPATIENT', 'INPATIENT', 'DENTAL', 'MATERNITY', 'OPTICAL']
 const CHANNELS = ['email', 'sms', 'webhook']
@@ -113,7 +114,7 @@ export function EventsGrid(p: WidgetProps) {
         pagination={false}
         dataSource={EVENTS.map((ev) => ({ key: ev, ev }))}
         columns={[
-          { title: 'Event', dataIndex: 'ev' },
+          { title: 'Event', dataIndex: 'ev', render: (ev: string) => eventLabel(ev) },
           ...CHANNELS.map((ch) => ({
             title: ch,
             key: ch,
@@ -171,6 +172,15 @@ export function EscalationForm(p: WidgetProps) {
   )
 }
 
+// Derive a stable camelCase field key from a human label:
+// "Employee ID" -> "employeeId", "Policy Number" -> "policyNumber".
+function deriveKey(label: string): string {
+  const words = label.split(/[^a-zA-Z0-9]+/).filter(Boolean)
+  return words
+    .map((w, i) => (i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+    .join('')
+}
+
 export function CustomFieldsEditor(p: WidgetProps) {
   const fields = (p.value as CustomFieldConfig[]) ?? []
   const upd = (i: number, f: CustomFieldConfig) => p.onChange(fields.map((x, j) => (j === i ? f : x)))
@@ -179,9 +189,17 @@ export function CustomFieldsEditor(p: WidgetProps) {
       <FieldLabel p={p} />
       <Space direction="vertical" style={{ width: '100%' }}>
         {fields.map((f, i) => (
-          <Space key={i} wrap>
-            <Input placeholder="key" value={f.key} onChange={(e) => upd(i, { ...f, key: e.target.value })} style={{ width: 120 }} />
-            <Input placeholder="label" value={f.label} onChange={(e) => upd(i, { ...f, label: e.target.value })} style={{ width: 140 }} />
+          <Space key={i} wrap align="start">
+            <div style={{ display: 'flex', flexDirection: 'column', width: 220 }}>
+              <Input
+                placeholder="label (e.g. Employee ID)"
+                value={f.label}
+                onChange={(e) => upd(i, { ...f, label: e.target.value, key: deriveKey(e.target.value) })}
+              />
+              <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: 2 }}>
+                key: {f.key || '—'}
+              </Typography.Text>
+            </div>
             <Select
               value={f.type}
               onChange={(val) => upd(i, { ...f, type: val })}

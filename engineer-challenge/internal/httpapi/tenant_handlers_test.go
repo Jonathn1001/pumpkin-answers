@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"claimsplatform/internal/configrepo/memory"
+	"claimsplatform/internal/domain"
 	"claimsplatform/internal/httpapi"
+	"claimsplatform/internal/seed"
 	"claimsplatform/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
@@ -100,5 +102,53 @@ func TestUpdateTenantWithInvalidStatusReturns422(t *testing.T) {
 	w := doJSON(r, http.MethodPatch, "/api/tenants/co", map[string]string{"name": "X", "status": "banana"})
 	if w.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("expected 422, got %d %s", w.Code, w.Body)
+	}
+}
+
+// Create now accepts the full config from the client and persists it as v1.
+func TestCreateTenantWithConfigPersistsIt(t *testing.T) {
+	r := newTestServer(t)
+	cfg := seed.GovHealth()
+	cfg.Branding.DisplayName = "Custom Brand XYZ"
+	w := doJSON(r, http.MethodPost, "/api/tenants", map[string]any{"name": "Custom Co", "config": cfg})
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: %d %s", w.Code, w.Body)
+	}
+	w = doJSON(r, http.MethodGet, "/api/tenants/custom-co/config", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("get config: %d %s", w.Code, w.Body)
+	}
+	var got domain.ConfigDocument
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Branding.DisplayName != "Custom Brand XYZ" {
+		t.Fatalf("client config not persisted: displayName = %q", got.Branding.DisplayName)
+	}
+}
+
+// An invalid client-supplied config is rejected with field-level errors (422).
+func TestCreateTenantWithInvalidConfigReturns422(t *testing.T) {
+	r := newTestServer(t)
+	cfg := seed.GovHealth()
+	cfg.Branding.DisplayName = "" // branding.displayName is required
+	w := doJSON(r, http.MethodPost, "/api/tenants", map[string]any{"name": "Bad Co", "config": cfg})
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("expected 422, got %d %s", w.Code, w.Body)
+	}
+}
+
+// The wizard seeds its "default" source from this endpoint.
+func TestConfigDefaultReturnsValidDoc(t *testing.T) {
+	w := doJSON(newTestServer(t), http.MethodGet, "/api/config-default", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d %s", w.Code, w.Body)
+	}
+	var got domain.ConfigDocument
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Branding.DisplayName == "" {
+		t.Fatalf("expected a non-empty default branding displayName")
 	}
 }

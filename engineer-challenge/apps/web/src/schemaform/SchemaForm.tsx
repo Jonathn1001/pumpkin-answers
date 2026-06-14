@@ -3,6 +3,7 @@ import type { ConfigDocument, ConfigSchemaResponse, FieldError } from '../api/ty
 import { getByPath, setByPath } from './path'
 import { isVisible, isRequired } from './conditional'
 import { WIDGETS, FallbackWidget } from './widgets'
+import { dimensionLabel } from '../labels'
 
 interface Props {
   schema: ConfigSchemaResponse
@@ -19,7 +20,7 @@ export function SchemaForm({ schema, config, onChange, errors }: Props) {
   return (
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
       {schema.dimensions.map((dim) => (
-        <Card key={dim.key} size="small" title={<span style={{ textTransform: 'capitalize' }}>{dim.key}</span>}>
+        <Card key={dim.key} size="small" title={dimensionLabel(dim.key)}>
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             {dim.ui
               .filter((d) => isVisible(d, config))

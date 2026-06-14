@@ -10,7 +10,10 @@ export function Compare() {
   const [left, setLeft] = useState<string>()
   const [right, setRight] = useState<string>()
   const [changes, setChanges] = useState<Change[] | null>(null)
-  const opts = (tenants.data ?? []).map((t) => ({ value: t.slug, label: `${t.name} (${t.slug})` }))
+  // Only live tenants are comparable — archived (soft-deleted) ones are hidden, matching the list.
+  const opts = (tenants.data ?? [])
+    .filter((t) => t.status === 'active')
+    .map((t) => ({ value: t.slug, label: `${t.name} (${t.slug})` }))
   return (
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
       <Typography.Title level={3} style={{ margin: 0 }}>

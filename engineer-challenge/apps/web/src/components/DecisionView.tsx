@@ -1,5 +1,6 @@
 import { Alert, Collapse, Descriptions, Tag } from 'antd'
 import type { ClaimDecision } from '../api/types'
+import { dimensionLabel, eventLabel } from '../labels'
 
 export function DecisionView({ d }: { d: ClaimDecision }) {
   if (!d.accepted) {
@@ -25,7 +26,7 @@ export function DecisionView({ d }: { d: ClaimDecision }) {
         {d.escalation ? ` · warn ${d.escalation.warnBeforeDays}d → ${d.escalation.notifyRole}` : ''}
       </Descriptions.Item>
       <Descriptions.Item label="Notifications">
-        {d.notifications.map((n) => `${n.event} [${n.channels.join(',')}]`).join(' · ') || '—'}
+        {d.notifications.map((n) => `${eventLabel(n.event)} [${n.channels.join(', ')}]`).join(' · ') || '—'}
       </Descriptions.Item>
       {d.customFieldValidation && (
         <Descriptions.Item label="Custom fields">
@@ -48,7 +49,7 @@ export function DecisionView({ d }: { d: ClaimDecision }) {
                 <ul style={{ margin: 0, paddingLeft: 18 }}>
                   {d.trace.map((t, i) => (
                     <li key={i}>
-                      <b>{t.dimension}:</b> {t.explanation}
+                      <b>{dimensionLabel(t.dimension)}:</b> {t.explanation}
                     </li>
                   ))}
                 </ul>
