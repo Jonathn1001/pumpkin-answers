@@ -23,6 +23,8 @@ func NewRouter(svc *usecase.Service) *gin.Engine {
 	api := r.Group("/api")
 	api.GET("/tenants", h.listTenants)
 	api.POST("/tenants", h.createTenant)
+	api.GET("/config-schema", h.configSchema)
+	api.GET("/diff", h.diff)
 
 	tg := api.Group("/tenants/:slug")
 	tg.Use(tenantcontext.Middleware(svc))
@@ -34,7 +36,8 @@ func NewRouter(svc *usecase.Service) *gin.Engine {
 	tg.POST("/versions", h.createDraft)
 	tg.POST("/versions/:n/publish", h.publish)
 	tg.POST("/rollback", h.rollback)
-	// claim routes added in Task 17.
+	tg.POST("/process", h.process)
+	tg.POST("/preview", h.preview)
 
 	return r
 }
