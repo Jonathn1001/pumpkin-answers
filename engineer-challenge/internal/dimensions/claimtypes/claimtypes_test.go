@@ -37,3 +37,11 @@ func TestDisabledTypeRejects(t *testing.T) {
 		t.Fatal("expected a rejection reason")
 	}
 }
+
+func TestUnknownTypeRejects(t *testing.T) {
+	dec := &domain.ClaimDecision{Accepted: true}
+	claimtypes.New().Evaluate(cfg(), domain.Claim{Type: domain.Inpatient}, dec)
+	if dec.Accepted {
+		t.Fatal("expected rejected for a claim type absent from config")
+	}
+}

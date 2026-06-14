@@ -33,15 +33,22 @@ func (dimension) Evaluate(cfg domain.ConfigDocument, claim domain.Claim, dec *do
 		dec.Trace = append(dec.Trace, domain.TraceEntry{Dimension: "approval",
 			Explanation: fmt.Sprintf("routed to committee %q (%d approvals)", route.CommitteeName, route.RequiredApprovals)})
 	} else {
+		matched := false
 		for _, tier := range a.Tiers {
 			if tier.MaxAmount == nil || claim.Amount <= *tier.MaxAmount {
 				route.TierLabel = tier.Label
 				route.ApproverRole = tier.ApproverRole
+				matched = true
 				break
 			}
 		}
-		dec.Trace = append(dec.Trace, domain.TraceEntry{Dimension: "approval",
-			Explanation: fmt.Sprintf("amount %d -> tier %q (%s)", claim.Amount, route.TierLabel, route.ApproverRole)})
+		if matched {
+			dec.Trace = append(dec.Trace, domain.TraceEntry{Dimension: "approval",
+				Explanation: fmt.Sprintf("amount %d -> tier %q (%s)", claim.Amount, route.TierLabel, route.ApproverRole)})
+		} else {
+			dec.Trace = append(dec.Trace, domain.TraceEntry{Dimension: "approval",
+				Explanation: fmt.Sprintf("amount %d matched no tier (check approval.tiers configuration)", claim.Amount)})
+		}
 	}
 	dec.Approval = &domain.ApprovalDecision{Outcome: domain.Routed, Route: route}
 }

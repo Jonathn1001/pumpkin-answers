@@ -34,6 +34,14 @@ func TestRouteToFirstFittingTier(t *testing.T) {
 	}
 }
 
+func TestRouteToOpenEndedTier(t *testing.T) {
+	dec := &domain.ClaimDecision{Accepted: true}
+	approval.New().Evaluate(tiered(), domain.Claim{Amount: 60000}, dec)
+	if dec.Approval.Outcome != domain.Routed || dec.Approval.Route.TierLabel != "Board" {
+		t.Fatalf("expected routed->Board (open-ended tier), got %+v", dec.Approval)
+	}
+}
+
 func TestZeroThresholdNeverAutoApproves(t *testing.T) {
 	cfg := domain.ConfigDocument{Approval: domain.ApprovalConfig{
 		AutoApproveThreshold: 0, Model: domain.ApprovalModelCommittee,

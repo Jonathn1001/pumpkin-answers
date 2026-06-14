@@ -25,7 +25,7 @@ func TestPerTypeOverrideWins(t *testing.T) {
 }
 
 func TestDefaultWhenNoOverride(t *testing.T) {
-	cfg := domain.ConfigDocument{SLA: domain.SLAConfig{DefaultDays: 15}}
+	cfg := domain.ConfigDocument{SLA: domain.SLAConfig{DefaultDays: 15, PerClaimType: map[domain.ClaimType]int{}}}
 	dec := &domain.ClaimDecision{Accepted: true}
 	sla.New().Evaluate(cfg, domain.Claim{Type: domain.Inpatient, SubmittedAt: time.Now()}, dec)
 	if dec.SLADays != 15 {
