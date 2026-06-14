@@ -1,67 +1,62 @@
-import type { ClaimDecision } from "../api/types";
-import { Badge } from "./Badge";
+import { Alert, Collapse, Descriptions, Tag } from 'antd'
+import type { ClaimDecision } from '../api/types'
 
 export function DecisionView({ d }: { d: ClaimDecision }) {
   if (!d.accepted) {
-    return (
-      <div className="rounded border border-red-300 bg-red-50 p-3 text-sm">
-        <b>Rejected:</b> {d.rejectionReasons.join("; ")}
-      </div>
-    );
+    return <Alert type="error" showIcon message="Rejected" description={d.rejectionReasons.join('; ')} />
   }
-  const r = d.approval?.route;
+  const r = d.approval?.route
   return (
-    <div className="space-y-2 rounded border bg-white p-3 text-sm">
-      <div>
-        <b>Approval:</b>{" "}
-        {d.approval?.outcome === "auto_approved" ? (
-          <Badge tone="green">auto-approved</Badge>
+    <Descriptions column={1} bordered size="small">
+      <Descriptions.Item label="Approval">
+        {d.approval?.outcome === 'auto_approved' ? (
+          <Tag color="green">auto-approved</Tag>
         ) : (
-          <Badge tone="blue">
+          <Tag color="blue">
             routed → {r?.committeeName ?? r?.tierLabel}
-            {r?.approverRole ? ` (${r.approverRole})` : ""}
-            {r?.requiredApprovals ? ` · ${r.requiredApprovals} approvals` : ""}
-          </Badge>
+            {r?.approverRole ? ` (${r.approverRole})` : ''}
+            {r?.requiredApprovals ? ` · ${r.requiredApprovals} approvals` : ''}
+          </Tag>
         )}
-      </div>
-      <div>
-        <b>Required documents:</b>{" "}
-        {(d.requiredDocuments ?? []).join(", ") || "—"}
-      </div>
-      <div>
-        <b>SLA:</b> {d.slaDays} days → {d.slaDeadline?.slice(0, 10)}
-        {d.escalation
-          ? ` · warn ${d.escalation.warnBeforeDays}d → ${d.escalation.notifyRole}`
-          : ""}
-      </div>
-      <div>
-        <b>Notifications:</b>{" "}
-        {d.notifications
-          .map((n) => `${n.event} [${n.channels.join(",")}]`)
-          .join(" · ")}
-      </div>
+      </Descriptions.Item>
+      <Descriptions.Item label="Required documents">{(d.requiredDocuments ?? []).join(', ') || '—'}</Descriptions.Item>
+      <Descriptions.Item label="SLA">
+        {d.slaDays} days → {d.slaDeadline?.slice(0, 10)}
+        {d.escalation ? ` · warn ${d.escalation.warnBeforeDays}d → ${d.escalation.notifyRole}` : ''}
+      </Descriptions.Item>
+      <Descriptions.Item label="Notifications">
+        {d.notifications.map((n) => `${n.event} [${n.channels.join(',')}]`).join(' · ') || '—'}
+      </Descriptions.Item>
       {d.customFieldValidation && (
-        <div>
-          <b>Custom fields:</b>{" "}
+        <Descriptions.Item label="Custom fields">
           {d.customFieldValidation.valid ? (
-            <Badge tone="green">valid</Badge>
+            <Tag color="green">valid</Tag>
           ) : (
-            <Badge tone="red">
-              {d.customFieldValidation.errors.map((e) => e.field).join(", ")}
-            </Badge>
+            <Tag color="red">{d.customFieldValidation.errors.map((e) => e.field).join(', ')}</Tag>
           )}
-        </div>
+        </Descriptions.Item>
       )}
-      <details>
-        <summary className="cursor-pointer font-medium">Trace</summary>
-        <ul className="ml-4 list-disc">
-          {d.trace.map((t, i) => (
-            <li key={i}>
-              <b>{t.dimension}:</b> {t.explanation}
-            </li>
-          ))}
-        </ul>
-      </details>
-    </div>
-  );
+      <Descriptions.Item label="Trace">
+        <Collapse
+          ghost
+          size="small"
+          items={[
+            {
+              key: 'trace',
+              label: `${d.trace.length} steps`,
+              children: (
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {d.trace.map((t, i) => (
+                    <li key={i}>
+                      <b>{t.dimension}:</b> {t.explanation}
+                    </li>
+                  ))}
+                </ul>
+              ),
+            },
+          ]}
+        />
+      </Descriptions.Item>
+    </Descriptions>
+  )
 }

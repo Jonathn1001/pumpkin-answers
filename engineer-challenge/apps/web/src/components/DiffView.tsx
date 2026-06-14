@@ -1,34 +1,22 @@
-import type { Change } from "../api/types";
+import { Table, Tag, Typography } from 'antd'
+import type { Change } from '../api/types'
 
-const tone = {
-  added: "bg-green-50 text-green-800",
-  removed: "bg-red-50 text-red-800",
-  changed: "bg-amber-50 text-amber-800",
-};
+const tone: Record<Change['type'], string> = { added: 'green', removed: 'red', changed: 'gold' }
 
 export function DiffView({ changes }: { changes: Change[] }) {
-  if (!changes.length)
-    return <div className="text-sm text-gray-500">No differences.</div>;
+  if (!changes.length) return <Typography.Text type="secondary">No differences.</Typography.Text>
+  const rows = changes.map((c, i) => ({ ...c, key: i }))
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-left">
-          <th>Path</th>
-          <th>Type</th>
-          <th>Left</th>
-          <th>Right</th>
-        </tr>
-      </thead>
-      <tbody>
-        {changes.map((c, i) => (
-          <tr key={i} className={tone[c.type]}>
-            <td className="font-mono">{c.path}</td>
-            <td>{c.type}</td>
-            <td className="font-mono">{JSON.stringify(c.left)}</td>
-            <td className="font-mono">{JSON.stringify(c.right)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
+    <Table
+      size="small"
+      pagination={false}
+      dataSource={rows}
+      columns={[
+        { title: 'Path', dataIndex: 'path', render: (p: string) => <Typography.Text code>{p}</Typography.Text> },
+        { title: 'Type', dataIndex: 'type', render: (t: Change['type']) => <Tag color={tone[t]}>{t}</Tag> },
+        { title: 'Left', dataIndex: 'left', render: (v: unknown) => <Typography.Text code>{JSON.stringify(v) ?? '—'}</Typography.Text> },
+        { title: 'Right', dataIndex: 'right', render: (v: unknown) => <Typography.Text code>{JSON.stringify(v) ?? '—'}</Typography.Text> },
+      ]}
+    />
+  )
 }

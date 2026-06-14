@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button, Select, Space, Typography } from 'antd'
 import { useTenants, useDiff } from '../api/hooks'
 import { DiffView } from '../components/DiffView'
 import type { Change } from '../api/types'
@@ -6,18 +7,28 @@ import type { Change } from '../api/types'
 export function Compare() {
   const tenants = useTenants()
   const diff = useDiff()
-  const [left, setLeft] = useState('')
-  const [right, setRight] = useState('')
+  const [left, setLeft] = useState<string>()
+  const [right, setRight] = useState<string>()
   const [changes, setChanges] = useState<Change[] | null>(null)
+  const opts = (tenants.data ?? []).map((t) => ({ value: t.slug, label: `${t.name} (${t.slug})` }))
   return (
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold">Compare tenants</h2>
-      <div className="flex gap-2">
-        <select className="rounded border px-2 py-1" value={left} onChange={e => setLeft(e.target.value)}><option value="">left…</option>{tenants.data?.map(t => <option key={t.slug} value={t.slug}>{t.slug}</option>)}</select>
-        <select className="rounded border px-2 py-1" value={right} onChange={e => setRight(e.target.value)}><option value="">right…</option>{tenants.data?.map(t => <option key={t.slug} value={t.slug}>{t.slug}</option>)}</select>
-        <button className="rounded bg-blue-600 px-3 py-1 text-white" disabled={!left || !right} onClick={() => diff.mutate({ left, right }, { onSuccess: r => setChanges(r.changes) })}>Diff</button>
-      </div>
+    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      <Typography.Title level={3} style={{ margin: 0 }}>
+        Compare tenants
+      </Typography.Title>
+      <Space wrap>
+        <Select placeholder="left tenant…" style={{ width: 240 }} value={left} onChange={setLeft} options={opts} />
+        <Select placeholder="right tenant…" style={{ width: 240 }} value={right} onChange={setRight} options={opts} />
+        <Button
+          type="primary"
+          disabled={!left || !right}
+          loading={diff.isPending}
+          onClick={() => left && right && diff.mutate({ left, right }, { onSuccess: (r) => setChanges(r.changes) })}
+        >
+          Diff
+        </Button>
+      </Space>
       {changes && <DiffView changes={changes} />}
-    </div>
+    </Space>
   )
 }

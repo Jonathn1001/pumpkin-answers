@@ -1,101 +1,86 @@
-import { useState } from "react";
-import { useVersions, useRollback, useTenant, useDiff } from "../../api/hooks";
-import { DiffView } from "../../components/DiffView";
-import type { Change } from "../../api/types";
+import { useState } from 'react'
+import { Button, Card, Empty, Table, Tag, Typography } from 'antd'
+import type { TableColumnsType } from 'antd'
+import { useVersions, useRollback, useTenant, useDiff } from '../../api/hooks'
+import { DiffView } from '../../components/DiffView'
+import type { Change, ConfigVersion } from '../../api/types'
 
 export function VersionsTab({ slug }: { slug: string }) {
-  const versions = useVersions(slug);
-  const tenant = useTenant(slug);
-  const rollback = useRollback(slug);
-  const diff = useDiff();
-  const [selected, setSelected] = useState<number | null>(null);
-  const [changes, setChanges] = useState<Change[] | null>(null);
-
-  if (versions.isLoading) return <div>Loading…</div>;
-  const active = tenant.data?.activeVersionNumber;
+  const versions = useVersions(slug)
+  const tenant = useTenant(slug)
+  const rollback = useRollback(slug)
+  const diff = useDiff()
+  const [selected, setSelected] = useState<number | null>(null)
+  const [changes, setChanges] = useState<Change[] | null>(null)
+  const active = tenant.data?.activeVersionNumber
 
   function select(n: number) {
-    setSelected(n);
-    setChanges(null);
+    setSelected(n)
+    setChanges(null)
     if (n > 1) {
-      diff.mutate(
-        { left: `${slug}@${n - 1}`, right: `${slug}@${n}` },
-        { onSuccess: (r) => setChanges(r.changes) },
-      );
+      diff.mutate({ left: `${slug}@${n - 1}`, right: `${slug}@${n}` }, { onSuccess: (r) => setChanges(r.changes) })
     }
   }
 
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <table className="h-fit w-full text-sm">
-        <thead>
-          <tr className="border-b text-left">
-            <th className="p-2">Version</th>
-            <th>Status</th>
-            <th>By</th>
-            <th>When</th>
-            <th>Note</th>
-          </tr>
-        </thead>
-        <tbody>
-          {versions.data?.map((v) => (
-            <tr
-              key={v.versionNumber}
-              className={`cursor-pointer border-b hover:bg-gray-50 ${v.versionNumber === selected ? "bg-blue-50" : ""}`}
-              onClick={() => select(v.versionNumber)}
-            >
-              <td className="p-2">
-                v{v.versionNumber}
-                {v.versionNumber === active ? " (active)" : ""}
-              </td>
-              <td>{v.status}</td>
-              <td>{v.createdBy || "—"}</td>
-              <td>{v.createdAt.slice(0, 10)}</td>
-              <td>{v.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  const columns: TableColumnsType<ConfigVersion> = [
+    {
+      title: 'Version',
+      dataIndex: 'versionNumber',
+      render: (n: number) => (
+        <span>
+          v{n}
+          {n === active ? (
+            <Tag color="green" style={{ marginLeft: 6 }}>
+              active
+            </Tag>
+          ) : null}
+        </span>
+      ),
+    },
+    { title: 'Status', dataIndex: 'status' },
+    { title: 'By', dataIndex: 'createdBy', render: (b?: string) => b || '—' },
+    { title: 'When', dataIndex: 'createdAt', render: (d: string) => d.slice(0, 10) },
+    { title: 'Note', dataIndex: 'note' },
+  ]
 
-      <div className="rounded-lg border bg-white p-4">
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <Table
+        rowKey="versionNumber"
+        size="small"
+        loading={versions.isLoading}
+        columns={columns}
+        dataSource={versions.data}
+        pagination={false}
+        onRow={(r) => ({ onClick: () => select(r.versionNumber), style: { cursor: 'pointer' } })}
+        rowClassName={(r) => (r.versionNumber === selected ? 'ant-table-row-selected' : '')}
+      />
+      <Card
+        size="small"
+        title={selected ? `Version details — v${selected}${selected === active ? ' (active)' : ''}` : 'Version details'}
+        extra={
+          selected && selected !== active ? (
+            <Button size="small" type="primary" loading={rollback.isPending} onClick={() => rollback.mutate(selected)}>
+              Rollback to this version
+            </Button>
+          ) : null
+        }
+      >
         {selected == null ? (
-          <p className="text-sm text-gray-500">
-            Select a version to see what changed.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold">
-                Version details — v{selected}
-                {selected === active ? " (active)" : ""}
-              </h3>
-              {selected !== active && (
-                <button
-                  className="rounded bg-blue-600 px-3 py-1 text-sm text-white disabled:opacity-50"
-                  disabled={rollback.isPending}
-                  onClick={() => rollback.mutate(selected)}
-                >
-                  Rollback to this version
-                </button>
-              )}
-            </div>
-            {selected === 1 ? (
-              <p className="text-sm text-gray-500">
-                Initial version — nothing to compare against.
-              </p>
-            ) : diff.isPending && !changes ? (
-              <p className="text-sm text-gray-500">Loading diff…</p>
-            ) : changes ? (
-              <div className="space-y-1">
-                <p className="text-xs text-gray-500">
-                  Changes from v{selected - 1} → v{selected}:
-                </p>
-                <DiffView changes={changes} />
-              </div>
-            ) : null}
-          </div>
-        )}
-      </div>
+          <Empty description="Select a version to see what changed." image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        ) : selected === 1 ? (
+          <Typography.Text type="secondary">Initial version — nothing to compare against.</Typography.Text>
+        ) : diff.isPending && !changes ? (
+          <Typography.Text type="secondary">Loading diff…</Typography.Text>
+        ) : changes ? (
+          <>
+            <Typography.Paragraph type="secondary" style={{ marginBottom: 8 }}>
+              Changes from v{selected - 1} → v{selected}:
+            </Typography.Paragraph>
+            <DiffView changes={changes} />
+          </>
+        ) : null}
+      </Card>
     </div>
-  );
+  )
 }

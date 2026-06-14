@@ -1,52 +1,34 @@
-import { useState } from "react";
-import { useDiff, useVersions } from "../../api/hooks";
-import { DiffView } from "../../components/DiffView";
-import type { Change } from "../../api/types";
+import { useState } from 'react'
+import { Button, Select, Space } from 'antd'
+import { useDiff, useVersions } from '../../api/hooks'
+import { DiffView } from '../../components/DiffView'
+import type { Change } from '../../api/types'
 
 export function CompareTab({ slug }: { slug: string }) {
-  const versions = useVersions(slug);
-  const diff = useDiff();
-  const [left, setLeft] = useState("");
-  const [right, setRight] = useState("");
-  const [changes, setChanges] = useState<Change[] | null>(null);
-  const opts = versions.data?.map((v) => `${slug}@${v.versionNumber}`) ?? [];
+  const versions = useVersions(slug)
+  const diff = useDiff()
+  const [left, setLeft] = useState<string>()
+  const [right, setRight] = useState<string>()
+  const [changes, setChanges] = useState<Change[] | null>(null)
+  const opts = (versions.data ?? []).map((v) => ({
+    value: `${slug}@${v.versionNumber}`,
+    label: `${slug}@${v.versionNumber}`,
+  }))
   return (
-    <div className="space-y-3">
-      <div className="flex gap-2">
-        <select
-          className="rounded border px-2 py-1"
-          value={left}
-          onChange={(e) => setLeft(e.target.value)}
-        >
-          <option value="">left…</option>
-          {opts.map((o) => (
-            <option key={o}>{o}</option>
-          ))}
-        </select>
-        <select
-          className="rounded border px-2 py-1"
-          value={right}
-          onChange={(e) => setRight(e.target.value)}
-        >
-          <option value="">right…</option>
-          {opts.map((o) => (
-            <option key={o}>{o}</option>
-          ))}
-        </select>
-        <button
-          className="rounded bg-blue-600 px-3 py-1 text-white"
+    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      <Space wrap>
+        <Select placeholder="left…" style={{ width: 200 }} value={left} onChange={setLeft} options={opts} />
+        <Select placeholder="right…" style={{ width: 200 }} value={right} onChange={setRight} options={opts} />
+        <Button
+          type="primary"
           disabled={!left || !right}
-          onClick={() =>
-            diff.mutate(
-              { left, right },
-              { onSuccess: (r) => setChanges(r.changes) },
-            )
-          }
+          loading={diff.isPending}
+          onClick={() => left && right && diff.mutate({ left, right }, { onSuccess: (r) => setChanges(r.changes) })}
         >
           Diff
-        </button>
-      </div>
+        </Button>
+      </Space>
       {changes && <DiffView changes={changes} />}
-    </div>
-  );
+    </Space>
+  )
 }
