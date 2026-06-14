@@ -57,6 +57,11 @@ func (dimension) Validate(cfg domain.ConfigDocument) []domain.FieldError {
 		if f.Type == "select" && len(f.Options) == 0 {
 			errs = append(errs, domain.FieldError{Field: fmt.Sprintf("customFields[%d].options", i), Message: "select field needs options"})
 		}
+		if f.Validation != nil && f.Validation.Pattern != nil {
+			if _, err := regexp.Compile(*f.Validation.Pattern); err != nil {
+				errs = append(errs, domain.FieldError{Field: fmt.Sprintf("customFields[%d].validation.pattern", i), Message: "invalid regular expression"})
+			}
+		}
 	}
 	return errs
 }
