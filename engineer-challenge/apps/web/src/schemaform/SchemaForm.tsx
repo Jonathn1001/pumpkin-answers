@@ -4,7 +4,7 @@ import type {
   FieldError,
 } from "../api/types";
 import { getByPath, setByPath } from "./path";
-import { isVisible } from "./conditional";
+import { isVisible, isRequired } from "./conditional";
 import { WIDGETS, FallbackWidget } from "./widgets";
 
 interface Props {
@@ -32,10 +32,11 @@ export function SchemaForm({ schema, config, onChange, errors }: Props) {
               .filter((d) => isVisible(d, config))
               .map((d) => {
                 const Widget = WIDGETS[d.widget] ?? FallbackWidget;
+                const descriptor = { ...d, required: isRequired(d, config) };
                 return (
                   <Widget
                     key={d.key}
-                    descriptor={d}
+                    descriptor={descriptor}
                     value={getByPath(config, d.key)}
                     config={config}
                     errors={errorsFor(d.key)}

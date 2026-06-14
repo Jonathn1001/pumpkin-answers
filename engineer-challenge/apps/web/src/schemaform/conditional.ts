@@ -11,3 +11,9 @@ export function isVisible(d: FieldDescriptor, config: ConfigDocument): boolean {
 export function webhookRequired(config: ConfigDocument): boolean {
   return (config.notifications?.channels ?? []).includes('webhook')
 }
+
+// Effective required-ness for a field given the current config (server stays source of truth).
+export function isRequired(d: FieldDescriptor, config: ConfigDocument): boolean {
+  if (d.key === 'notifications.webhookUrl') return webhookRequired(config)
+  return d.required ?? false
+}

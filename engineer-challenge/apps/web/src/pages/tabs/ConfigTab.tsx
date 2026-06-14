@@ -8,6 +8,7 @@ import {
 import { ApiError } from "../../api/client";
 import { SchemaForm } from "../../schemaform/SchemaForm";
 import { useAjv } from "../../schemaform/useAjv";
+import { webhookRequired } from "../../schemaform/conditional";
 import type { ConfigDocument, FieldError } from "../../api/types";
 
 export function ConfigTab({ slug }: { slug: string }) {
@@ -39,6 +40,13 @@ export function ConfigTab({ slug }: { slug: string }) {
             const clientErrs = validate(
               config as unknown as Record<string, unknown>,
             );
+            if (webhookRequired(config) && !config.notifications?.webhookUrl) {
+              clientErrs.push({
+                field: "notifications.webhookUrl",
+                message:
+                  "Webhook URL is required when the webhook channel is enabled",
+              });
+            }
             if (clientErrs.length) {
               setErrors(clientErrs);
               return;
