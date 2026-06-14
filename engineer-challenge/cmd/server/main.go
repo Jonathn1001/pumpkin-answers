@@ -1,4 +1,6 @@
-// Command server runs the claims-config API for local dev (no SPA embed; that is Plan 4).
+// Command server runs the claims-config platform as a single binary: it mounts
+// the /api routes and, when built with the UI (make web / Docker), serves the
+// embedded React SPA at / with client-side-route fallback (Plan 4).
 package main
 
 import (
@@ -57,8 +59,10 @@ func main() {
 	}
 
 	svc := usecase.New(repo)
+	router := httpapi.NewRouter(svc)
+	serveUI(router) // mounts the embedded SPA when present; API-only otherwise
 	slog.Info("api listening", "port", port)
-	if err := httpapi.NewRouter(svc).Run(":" + port); err != nil {
+	if err := router.Run(":" + port); err != nil {
 		fatal("server failed", "err", err)
 	}
 }

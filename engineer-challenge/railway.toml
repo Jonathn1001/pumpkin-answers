@@ -1,0 +1,21 @@
+# Railway service configuration (https://docs.railway.com/reference/config-as-code).
+#
+# SETUP (one-time, in the Railway dashboard):
+#   1. Set this service's Root Directory to "engineer-challenge" so the paths
+#      below resolve (this repo is a multi-project monorepo).
+#   2. Add a PostgreSQL database to the project.
+#   3. Add a service variable wiring the app to it:
+#        DATABASE_URL = ${{Postgres.DATABASE_URL}}
+#
+# PORT is injected by Railway at runtime; the server reads it (defaults to 8080).
+# Migrations and seed data run automatically on startup (see cmd/server/main.go).
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/healthz"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

@@ -1,0 +1,8 @@
+# Go build output
+/bin/
+
+# SPA build staged for embedding by cmd/server/webui.go.
+# The directory must exist (and hold the placeholder) so `//go:embed all:dist`
+# compiles in a plain checkout; the real build is produced by `make web` / Docker.
+/cmd/server/dist/*
+!/cmd/server/dist/.gitkeep
