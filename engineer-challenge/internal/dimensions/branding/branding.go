@@ -42,7 +42,7 @@ func (dimension) DefaultConfig() any {
 func (dimension) UISchema() []registry.FieldDescriptor {
 	return []registry.FieldDescriptor{
 		{Key: "branding.displayName", Label: "Display name", Type: "string", Widget: "text", Required: true},
-		{Key: "branding.logoUrl", Label: "Logo URL", Type: "string", Widget: "text"},
+		{Key: "branding.logoUrl", Label: "Logo URL", Type: "string", Widget: "logo"},
 		{Key: "branding.primaryColor", Label: "Primary color", Type: "string", Widget: "color"},
 		{Key: "branding.secondaryColor", Label: "Secondary color", Type: "string", Widget: "color"},
 		{Key: "branding.supportEmail", Label: "Support email", Type: "string", Widget: "text"},

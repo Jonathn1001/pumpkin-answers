@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import type { WidgetProps } from './types'
-import { TextInput, NumberInput, Toggle, Select, ColorInput, FallbackWidget } from './base'
+import { TextInput, NumberInput, Toggle, Select, ColorInput, LogoInput, FallbackWidget } from './base'
 import { ClaimTypeGrid, TierList, CommitteeForm, ChannelMultiSelect, EventsGrid, PerTypeNumberMap, EscalationForm, CustomFieldsEditor } from './complex'
 
 export { FallbackWidget }
@@ -11,6 +11,7 @@ export const WIDGETS: Record<string, ComponentType<WidgetProps>> = {
   toggle: Toggle,
   select: Select,
   color: ColorInput,
+  logo: LogoInput,
   'claimtype-grid': ClaimTypeGrid,
   'tier-list': TierList,
   committee: CommitteeForm,

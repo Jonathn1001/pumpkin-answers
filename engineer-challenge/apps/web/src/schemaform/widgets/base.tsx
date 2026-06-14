@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { WidgetProps } from './types'
 
 export function FieldLabel({ p }: { p: WidgetProps }) {
@@ -53,6 +54,28 @@ export function ColorInput(p: WidgetProps) {
     <label className="block">
       <FieldLabel p={p} />
       <input type="color" value={(p.value as string) || '#000000'} onChange={e => p.onChange(e.target.value)} />
+    </label>
+  )
+}
+
+export function LogoInput(p: WidgetProps) {
+  const url = (p.value as string) ?? ''
+  const [brokenUrl, setBrokenUrl] = useState('')
+  const showImg = url !== '' && url !== brokenUrl
+  return (
+    <label className="block">
+      <FieldLabel p={p} />
+      <div className="flex items-center gap-3">
+        {showImg ? (
+          <img src={url} alt="logo preview" className="h-12 w-12 rounded border object-contain" onError={() => setBrokenUrl(url)} />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded border text-center text-[10px] text-gray-400">
+            {url ? 'invalid' : 'no logo'}
+          </div>
+        )}
+        <input className="flex-1 rounded border px-2 py-1" placeholder="https://…" value={url} onChange={e => p.onChange(e.target.value)} />
+        {url && <button type="button" className="text-sm text-blue-700" onClick={() => p.onChange('')}>Remove</button>}
+      </div>
     </label>
   )
 }
