@@ -17,7 +17,7 @@ type handlers struct{ svc *usecase.Service }
 // NewRouter wires all /api routes onto a fresh Gin engine.
 func NewRouter(svc *usecase.Service) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Recovery())
+	r.Use(gin.Recovery(), bodyLimit)
 	h := &handlers{svc: svc}
 
 	api := r.Group("/api")
@@ -59,4 +59,12 @@ func fail(c *gin.Context, err error) {
 
 func badRequest(c *gin.Context, err error) {
 	c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"code": "bad_request", "message": err.Error()}})
+}
+
+// maxRequestBody caps request bodies to mitigate memory-exhaustion DoS.
+const maxRequestBody = 1 << 20 // 1 MiB
+
+func bodyLimit(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBody)
+	c.Next()
 }
