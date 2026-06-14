@@ -53,17 +53,6 @@ export function useCreateTenant() {
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.tenants }),
   });
 }
-export function useUpdateTenant(slug: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (b: { name: string; status: string }) =>
-      request<Tenant>("PATCH", `/tenants/${slug}`, b),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.tenant(slug) });
-      qc.invalidateQueries({ queryKey: keys.tenants });
-    },
-  });
-}
 export function useSaveDraft(slug: string) {
   const qc = useQueryClient();
   return useMutation({
