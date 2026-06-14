@@ -33,9 +33,16 @@ type Committee struct {
 	RequiredApprovals int    `json:"requiredApprovals"`
 }
 
+type ApprovalModel string
+
+const (
+	ApprovalModelTiered    ApprovalModel = "tiered"
+	ApprovalModelCommittee ApprovalModel = "committee"
+)
+
 type ApprovalConfig struct {
 	AutoApproveThreshold int64          `json:"autoApproveThreshold"`
-	Model                string         `json:"model"` // tiered | committee
+	Model                ApprovalModel  `json:"model"` // tiered | committee
 	Tiers                []ApprovalTier `json:"tiers,omitempty"`
 	Committee            *Committee     `json:"committee,omitempty"`
 }

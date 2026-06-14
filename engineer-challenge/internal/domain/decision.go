@@ -10,11 +10,11 @@ const (
 )
 
 type ApprovalRoute struct {
-	Model             string `json:"model"` // tiered | committee
-	TierLabel         string `json:"tierLabel,omitempty"`
-	ApproverRole      string `json:"approverRole,omitempty"`
-	CommitteeName     string `json:"committeeName,omitempty"`
-	RequiredApprovals int    `json:"requiredApprovals,omitempty"`
+	Model             ApprovalModel `json:"model"` // tiered | committee
+	TierLabel         string        `json:"tierLabel,omitempty"`
+	ApproverRole      string        `json:"approverRole,omitempty"`
+	CommitteeName     string        `json:"committeeName,omitempty"`
+	RequiredApprovals int           `json:"requiredApprovals,omitempty"`
 }
 
 type ApprovalDecision struct {

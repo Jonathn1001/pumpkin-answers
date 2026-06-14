@@ -24,3 +24,14 @@ func TestRegisterAndAll(t *testing.T) {
 		t.Fatalf("expected [a b] in order, got %v", got)
 	}
 }
+
+func TestGet(t *testing.T) {
+	registry.Reset()
+	registry.Register(fakeDim{key: "a"})
+	if got := registry.Get("a"); got == nil || got.Key() != "a" {
+		t.Fatalf("Get(\"a\") = %v, want dim with key a", got)
+	}
+	if got := registry.Get("missing"); got != nil {
+		t.Fatalf("Get(\"missing\") = %v, want nil", got)
+	}
+}

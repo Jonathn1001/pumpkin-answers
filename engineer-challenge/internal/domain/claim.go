@@ -12,8 +12,10 @@ const (
 	Optical    ClaimType = "OPTICAL"
 )
 
-// AllClaimTypes là thứ tự cố định để render/seed.
-var AllClaimTypes = []ClaimType{Outpatient, Inpatient, Dental, Maternity, Optical}
+// AllClaimTypes trả về thứ tự cố định để render/seed (slice mới mỗi lần, tránh mutation từ caller).
+func AllClaimTypes() []ClaimType {
+	return []ClaimType{Outpatient, Inpatient, Dental, Maternity, Optical}
+}
 
 type Claim struct {
 	Type         ClaimType      `json:"type"`
