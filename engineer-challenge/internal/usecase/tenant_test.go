@@ -2,10 +2,12 @@ package usecase_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"claimsplatform/internal/configrepo/memory"
 	"claimsplatform/internal/configvalidation"
+	"claimsplatform/internal/domain"
 	"claimsplatform/internal/usecase"
 )
 
@@ -23,6 +25,34 @@ func TestCreateTenantStartsFromValidDefault(t *testing.T) {
 	}
 	if tn.ActiveVersionNumber == nil || *tn.ActiveVersionNumber != 1 {
 		t.Fatalf("expected active version 1, got %v", tn.ActiveVersionNumber)
+	}
+}
+
+func TestUpdateTenantRejectsInvalidStatus(t *testing.T) {
+	svc := usecase.New(memory.New())
+	ctx := context.Background()
+	if _, err := svc.CreateTenant(ctx, "co", "Co", ""); err != nil {
+		t.Fatal(err)
+	}
+	_, err := svc.UpdateTenant(ctx, "co", "New", "banana")
+	var ve domain.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected ValidationError for invalid status, got %v", err)
+	}
+}
+
+func TestUpdateTenantAcceptsArchivedStatus(t *testing.T) {
+	svc := usecase.New(memory.New())
+	ctx := context.Background()
+	if _, err := svc.CreateTenant(ctx, "co", "Co", ""); err != nil {
+		t.Fatal(err)
+	}
+	tn, err := svc.UpdateTenant(ctx, "co", "Co", domain.TenantArchived)
+	if err != nil {
+		t.Fatalf("expected no error for valid 'archived' status, got %v", err)
+	}
+	if tn.Status != domain.TenantArchived {
+		t.Fatalf("expected status 'archived', got %q", tn.Status)
 	}
 }
 

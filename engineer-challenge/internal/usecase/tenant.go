@@ -42,5 +42,10 @@ func (s *Service) UpdateTenant(ctx context.Context, slug, name, status string) (
 	if status == "" {
 		status = domain.TenantActive
 	}
+	if status != domain.TenantActive && status != domain.TenantArchived {
+		return domain.Tenant{}, domain.ValidationError{Fields: []domain.FieldError{
+			{Field: "status", Message: "must be 'active' or 'archived'"},
+		}}
+	}
 	return s.repo.UpdateTenantMeta(ctx, slug, name, status)
 }
