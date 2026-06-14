@@ -27,7 +27,7 @@ type Change struct {
 }
 
 func Diff(left, right domain.ConfigDocument) ([]Change, error) {
-	changelog, err := diff.Diff(left, right)
+	changelog, err := diff.Diff(left, right, diff.SliceOrdering(true), diff.TagName("json"))
 	if err != nil {
 		return nil, err
 	}
