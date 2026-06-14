@@ -28,7 +28,13 @@ func NewRouter(svc *usecase.Service) *gin.Engine {
 	tg.Use(tenantcontext.Middleware(svc))
 	tg.GET("", h.getTenant)
 	tg.PATCH("", h.updateTenant)
-	// config + claim routes added in Tasks 16 and 17.
+	tg.GET("/config", h.getActiveConfig)
+	tg.GET("/versions", h.listVersions)
+	tg.GET("/versions/:n", h.getVersion)
+	tg.POST("/versions", h.createDraft)
+	tg.POST("/versions/:n/publish", h.publish)
+	tg.POST("/rollback", h.rollback)
+	// claim routes added in Task 17.
 
 	return r
 }
