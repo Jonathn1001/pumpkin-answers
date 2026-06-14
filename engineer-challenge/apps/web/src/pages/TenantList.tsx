@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useTenants, useCreateTenant, useUpdateTenant } from '../api/hooks'
-import { ApiError } from '../api/client'
+import { useTenants, useUpdateTenant } from '../api/hooks'
 import { Badge } from '../components/Badge'
+import { CreateTenantWizard } from '../components/CreateTenantWizard'
 import type { Tenant } from '../api/types'
 
 function TenantRow({ tenant: t, onClone }: { tenant: Tenant; onClone: (slug: string) => void }) {
@@ -41,35 +41,27 @@ function TenantRow({ tenant: t, onClone }: { tenant: Tenant; onClone: (slug: str
 
 export function TenantList() {
   const { data: tenants, isLoading } = useTenants()
-  const create = useCreateTenant()
-  const [name, setName] = useState('')
-  const [cloneFrom, setCloneFrom] = useState('')
-  const [err, setErr] = useState('')
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const [initialClone, setInitialClone] = useState('')
   if (isLoading) return <div>Loading…</div>
+  function openCreate(clone: string) { setInitialClone(clone); setWizardOpen(true) }
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Tenants</h2>
+        <button className="rounded bg-blue-600 px-3 py-1.5 text-white" onClick={() => openCreate('')}>+ Create Tenant</button>
+      </div>
       <table className="w-full rounded-lg border bg-white text-sm">
         <thead><tr className="border-b text-left"><th className="p-2">Name</th><th>Slug</th><th>Status</th><th>Active v</th><th className="p-2">Actions</th></tr></thead>
-        <tbody>{tenants?.map(t => <TenantRow key={t.slug} tenant={t} onClone={setCloneFrom} />)}</tbody>
+        <tbody>{tenants?.map(t => <TenantRow key={t.slug} tenant={t} onClone={openCreate} />)}</tbody>
       </table>
-      <form className="space-y-2 rounded-lg border bg-white p-4" onSubmit={e => {
-        e.preventDefault(); setErr('')
-        create.mutate({ name, cloneFrom: cloneFrom || undefined }, {
-          onSuccess: () => { setName(''); setCloneFrom('') },
-          onError: er => setErr(er instanceof ApiError ? (er.fields?.map(f => `${f.field}: ${f.message}`).join('; ') || er.message) : 'error'),
-        })
-      }}>
-        <h3 className="font-semibold">Create tenant</h3>
-        <p className="text-xs text-gray-500">The URL slug is generated from the name by the server.</p>
-        <div className="flex flex-wrap gap-2">
-          <input className="rounded border px-2 py-1" placeholder="name" value={name} onChange={e => setName(e.target.value)} />
-          <select className="rounded border px-2 py-1" value={cloneFrom} onChange={e => setCloneFrom(e.target.value)}>
-            <option value="">(default config)</option>{tenants?.map(t => <option key={t.slug} value={t.slug}>clone: {t.slug}</option>)}
-          </select>
-          <button className="rounded bg-blue-600 px-3 py-1 text-white disabled:opacity-50" type="submit" disabled={create.isPending}>Create</button>
-        </div>
-        {err && <div className="text-sm text-red-600">{err}</div>}
-      </form>
+      {wizardOpen && (
+        <CreateTenantWizard
+          tenants={tenants ?? []}
+          initialClone={initialClone}
+          onClose={() => setWizardOpen(false)}
+        />
+      )}
     </div>
   )
 }
