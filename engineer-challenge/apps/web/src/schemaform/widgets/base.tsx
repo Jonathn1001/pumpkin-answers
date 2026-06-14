@@ -61,7 +61,7 @@ export function FallbackWidget(p: WidgetProps) {
   return (
     <label className="block">
       <FieldLabel p={p} />
-      <textarea className="w-full rounded border px-2 py-1 font-mono text-xs" rows={4}
+      <textarea key={JSON.stringify(p.value)} className="w-full rounded border px-2 py-1 font-mono text-xs" rows={4}
         defaultValue={JSON.stringify(p.value, null, 2)}
         onBlur={e => { try { p.onChange(JSON.parse(e.target.value)) } catch { /* ignore invalid json */ } }} />
     </label>
