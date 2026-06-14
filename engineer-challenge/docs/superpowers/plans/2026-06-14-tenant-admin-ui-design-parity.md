@@ -99,9 +99,16 @@ export function useProcess(slug: string) {
 
 ---
 
-## Task 1 — Slug auto-gen (create form)
+## Task 1 — Slug generation (backend-owned)
 
-**Files:** Modify `src/pages/TenantList.tsx` (create form). Test: `tests/smoke.spec.ts` (or new `tests/create-tenant.spec.ts`).
+> **Design correction:** slug generation moved to the **backend** (domain concern;
+> server-authoritative). Implemented TDD in Go: new `internal/slug` package
+> (`Make`), `CreateTenant(name, cloneFrom)` derives from name with numeric-suffix
+> collision handling. `slug` is removed from the `POST /tenants` payload entirely
+> (no override, BE + FE). FE removed `slugify.ts`, drops the slug input, posts
+> `name` only. No client-side preview (avoids FE/BE drift).
+
+**Files:** `internal/slug/slug.go` (+test), `internal/usecase/tenant.go` (+test), `internal/httpapi/tenant_handlers.go` (+test), `apps/web/src/api/hooks.ts`, `apps/web/src/pages/TenantList.tsx`.
 
 - [ ] **Step 1 — Playwright test (red).** Add a test: navigate to tenant list, type Name "Acme Health Co"; assert the slug field/preview shows `acme-health-co` without manual typing; submit; assert new tenant row appears.
 - [ ] **Step 2 — Run, expect fail.** Run: `npx playwright test tests/<file> -g "auto slug"`. Expected: FAIL.

@@ -8,7 +8,6 @@ import (
 )
 
 type createTenantReq struct {
-	Slug      string `json:"slug" binding:"required"`
 	Name      string `json:"name" binding:"required"`
 	CloneFrom string `json:"cloneFrom"`
 }
@@ -19,7 +18,7 @@ func (h *handlers) createTenant(c *gin.Context) {
 		badRequest(c, err)
 		return
 	}
-	tn, err := h.svc.CreateTenant(c.Request.Context(), req.Slug, req.Name, req.CloneFrom)
+	tn, err := h.svc.CreateTenant(c.Request.Context(), req.Name, req.CloneFrom)
 	if err != nil {
 		fail(c, err)
 		return

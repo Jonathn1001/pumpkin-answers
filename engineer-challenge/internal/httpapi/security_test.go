@@ -11,7 +11,7 @@ import (
 func TestOversizedRequestBodyRejected(t *testing.T) {
 	r := newTestServer(t)
 	big := string(bytes.Repeat([]byte("a"), 2<<20)) // 2 MiB > 1 MiB cap
-	w := doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"slug": "x", "name": big})
+	w := doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"name": big})
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for oversized body, got %d", w.Code)
 	}

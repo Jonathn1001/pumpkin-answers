@@ -14,7 +14,7 @@ import (
 func TestSaveDraftRejectsInvalidConfig(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	_, _ = svc.CreateTenant(ctx, "co", "Co", "")
+	_, _ = svc.CreateTenant(ctx, "Co", "")
 	bad := seed.SafeGuard()
 	bad.SLA.DefaultDays = 0 // invalid: must be >= 1
 	_, err := svc.SaveDraftConfig(ctx, "co", bad, "oops", "tester")
@@ -27,7 +27,7 @@ func TestSaveDraftRejectsInvalidConfig(t *testing.T) {
 func TestSaveDraftThenPublishSwitchesActive(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	_, _ = svc.CreateTenant(ctx, "co", "Co", "")
+	_, _ = svc.CreateTenant(ctx, "Co", "")
 	v, err := svc.SaveDraftConfig(ctx, "co", seed.HealthFirst(), "to HF", "tester")
 	if err != nil {
 		t.Fatal(err)
@@ -44,7 +44,7 @@ func TestSaveDraftThenPublishSwitchesActive(t *testing.T) {
 func TestRollbackRestoresOldConfig(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	_, _ = svc.CreateTenant(ctx, "co", "Co", "") // v1 default
+	_, _ = svc.CreateTenant(ctx, "Co", "") // v1 default
 	v2, _ := svc.SaveDraftConfig(ctx, "co", seed.GovHealth(), "gov", "tester")
 	_ = svc.PublishVersion(ctx, "co", v2.VersionNumber)
 	rolled, err := svc.RollbackVersion(ctx, "co", 1, "tester")

@@ -3,10 +3,13 @@ package usecase
 
 import (
 	"context"
-	"regexp"
+	"errors"
+	"strconv"
+	"strings"
 
 	"claimsplatform/internal/configvalidation"
 	"claimsplatform/internal/domain"
+	"claimsplatform/internal/slug"
 )
 
 type Service struct {
@@ -15,15 +18,19 @@ type Service struct {
 
 func New(repo domain.ConfigurationRepository) *Service { return &Service{repo: repo} }
 
-// slugPattern enforces URL-safe, ref-parser-safe tenant slugs (no '@', '/', spaces).
-var slugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,62}$`)
-
-// CreateTenant starts from the default config, or clones cloneFrom's active config when set.
-func (s *Service) CreateTenant(ctx context.Context, slug, name, cloneFrom string) (domain.Tenant, error) {
-	if !slugPattern.MatchString(slug) {
+// CreateTenant derives a server-authoritative slug from name (slugs are never
+// client-supplied). It starts from the default config, or clones cloneFrom's
+// active config when set.
+func (s *Service) CreateTenant(ctx context.Context, name, cloneFrom string) (domain.Tenant, error) {
+	base := slug.Make(name)
+	if base == "" {
 		return domain.Tenant{}, domain.ValidationError{Fields: []domain.FieldError{
-			{Field: "slug", Message: "must be 1-63 chars of lowercase letters, digits, or hyphens (no leading hyphen)"},
+			{Field: "name", Message: "must contain at least one letter or digit to derive a slug"},
 		}}
+	}
+	tenantSlug, err := s.uniqueSlug(ctx, base)
+	if err != nil {
+		return domain.Tenant{}, err
 	}
 	cfg := DefaultDocument()
 	if cloneFrom != "" {
@@ -36,7 +43,27 @@ func (s *Service) CreateTenant(ctx context.Context, slug, name, cloneFrom string
 	if errs := configvalidation.Validate(cfg); len(errs) > 0 {
 		return domain.Tenant{}, domain.ValidationError{Fields: errs}
 	}
-	return s.repo.CreateTenant(ctx, domain.Tenant{Slug: slug, Name: name, Status: domain.TenantActive}, cfg)
+	return s.repo.CreateTenant(ctx, domain.Tenant{Slug: tenantSlug, Name: name, Status: domain.TenantActive}, cfg)
+}
+
+// uniqueSlug appends -2, -3, … until the slug is free, keeping within 63 chars.
+func (s *Service) uniqueSlug(ctx context.Context, base string) (string, error) {
+	candidate := base
+	for i := 2; ; i++ {
+		_, err := s.repo.GetTenantBySlug(ctx, candidate)
+		if errors.Is(err, domain.ErrTenantNotFound) {
+			return candidate, nil
+		}
+		if err != nil {
+			return "", err
+		}
+		suffix := "-" + strconv.Itoa(i)
+		trimmed := base
+		if len(trimmed)+len(suffix) > 63 {
+			trimmed = strings.TrimRight(base[:63-len(suffix)], "-")
+		}
+		candidate = trimmed + suffix
+	}
 }
 
 func (s *Service) GetTenant(ctx context.Context, slug string) (domain.Tenant, error) {

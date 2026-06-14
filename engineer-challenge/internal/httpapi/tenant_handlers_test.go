@@ -35,7 +35,7 @@ func doJSON(r http.Handler, method, path string, body any) *httptest.ResponseRec
 
 func TestCreateAndGetTenant(t *testing.T) {
 	r := newTestServer(t)
-	w := doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"slug": "acme", "name": "Acme"})
+	w := doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"name": "Acme"})
 	if w.Code != http.StatusCreated {
 		t.Fatalf("create: %d %s", w.Code, w.Body)
 	}
@@ -52,25 +52,51 @@ func TestGetUnknownTenantReturns404(t *testing.T) {
 	}
 }
 
-func TestCreateDuplicateSlugReturns409(t *testing.T) {
+func TestCreateSameNameTwiceAutoSuffixes(t *testing.T) {
 	r := newTestServer(t)
-	_ = doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"slug": "dup", "name": "A"})
-	w := doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"slug": "dup", "name": "B"})
-	if w.Code != http.StatusConflict {
-		t.Fatalf("expected 409, got %d", w.Code)
+	_ = doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"name": "Dup"})
+	w := doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"name": "Dup"})
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d %s", w.Code, w.Body)
+	}
+	var tn struct {
+		Slug string `json:"slug"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &tn); err != nil {
+		t.Fatal(err)
+	}
+	if tn.Slug != "dup-2" {
+		t.Fatalf("second slug = %q, want %q", tn.Slug, "dup-2")
 	}
 }
 
-func TestCreateTenantMissingFieldsReturns400(t *testing.T) {
-	w := doJSON(newTestServer(t), http.MethodPost, "/api/tenants", map[string]string{"name": "NoSlug"})
+func TestCreateTenantMissingNameReturns400(t *testing.T) {
+	// name is the only field now; slug is derived from it server-side.
+	w := doJSON(newTestServer(t), http.MethodPost, "/api/tenants", map[string]string{})
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", w.Code)
 	}
 }
 
+func TestCreateTenantNameOnlyDerivesSlug(t *testing.T) {
+	w := doJSON(newTestServer(t), http.MethodPost, "/api/tenants", map[string]string{"name": "SafeGuard Insurance"})
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d %s", w.Code, w.Body)
+	}
+	var tn struct {
+		Slug string `json:"slug"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &tn); err != nil {
+		t.Fatal(err)
+	}
+	if tn.Slug != "safeguard-insurance" {
+		t.Fatalf("derived slug = %q, want %q", tn.Slug, "safeguard-insurance")
+	}
+}
+
 func TestUpdateTenantWithInvalidStatusReturns422(t *testing.T) {
 	r := newTestServer(t)
-	_ = doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"slug": "co", "name": "Co"})
+	_ = doJSON(r, http.MethodPost, "/api/tenants", map[string]string{"name": "Co"})
 	w := doJSON(r, http.MethodPatch, "/api/tenants/co", map[string]string{"name": "X", "status": "banana"})
 	if w.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("expected 422, got %d %s", w.Code, w.Body)

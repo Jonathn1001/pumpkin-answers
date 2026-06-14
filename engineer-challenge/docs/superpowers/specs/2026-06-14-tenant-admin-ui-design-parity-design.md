@@ -13,8 +13,10 @@ a real, already-tested backend endpoint — no dead UI.
 
 ## Key finding
 
-All six gaps are **frontend-only**. The Go backend already exposes (and tests)
-every endpoint required:
+Five of the six gaps are **frontend-only**. The exception is slug generation:
+deriving a URL-safe slug from a tenant name is a **domain concern and lives in the
+backend** (see Decisions) so every client gets identical, server-authoritative
+slugs. The Go backend already exposes (and tests) every other endpoint required:
 
 | Need | Endpoint | Notes |
 |---|---|---|
@@ -34,24 +36,32 @@ done test-first (TDD) and the existing Go test suite must stay green.
   migration. (Matches challenge `processClaim` scope.)
 - **Branding logo:** URL field + live image preview + Remove. No file upload, no
   object storage.
-- **Slug:** auto-generated from tenant name; manual override available.
+- **Slug:** generated **server-side** from the tenant name. `slug` is not part of
+  the create payload at all — there is no client override (BE or FE).
+  `POST /tenants` takes `name` (+ optional `cloneFrom`). A derived slug that
+  collides gets a numeric suffix (`acme`, `acme-2`, …) so onboarding always
+  succeeds. No client-side slug preview (avoids FE/BE logic drift) — the FE shows
+  the slug returned in the create response.
 
 ## Shared building blocks (built first)
 
-- `src/lib/slugify.ts` — name → slug: lowercase, strip diacritics (incl.
-  Vietnamese), spaces → `-`, drop invalid chars, collapse `-`, trim, cap 63 chars,
-  conform to backend `slugPattern` `^[a-z0-9][a-z0-9-]{0,62}$`.
-- Extract a shared `DiffList` component from `CompareTab` (currently renders
-  `Change[]`) so version-diff and tenant-compare share one renderer.
+- `internal/slug` (Go) — `Make(name)` derives a slug matching backend
+  `slugPattern` `^[a-z0-9][a-z0-9-]{0,62}$`: strips diacritics (incl. Vietnamese
+  via NFD), collapses non-alphanumerics to `-`, trims, caps 63. Used by
+  `CreateTenant` with numeric-suffix collision handling.
+- Reuse the existing `DiffView` component (renders `Change[]`) for the version
+  diff panel — no new component needed.
 - Hooks: restore `useUpdateTenant` (PATCH), add `useProcess` (POST `/process`).
 
 ## Features (build order)
 
-### 1. Slug auto-gen (current create form)
-Remove the manual slug input. Derive slug from Name via `slugify`, shown
-read-only with a small "Edit" toggle to override. Still POSTs `slug`. Duplicate
-→ backend 409 `ErrSlugTaken` → field error, user edits. Empty derived slug →
-block + message.
+### 1. Slug generation (backend-owned)
+Backend: `CreateTenant(name, cloneFrom)` derives the slug via `slug.Make(name)`
+with numeric-suffix uniqueness; `slug` is removed from the request entirely (no
+override). Name with no usable chars → validation error on `name`. Frontend: the
+create form posts `name` only; the derived slug appears in the response /
+refreshed list. TDD via Go tests (`internal/slug`, `internal/usecase`,
+`internal/httpapi`).
 
 ### 2. Version Details / version-to-version diff (`VersionsTab`, mockup #5)
 Selecting a version opens a right-hand "Version Details (vN)" panel listing

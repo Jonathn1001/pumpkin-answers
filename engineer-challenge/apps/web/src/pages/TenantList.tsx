@@ -7,7 +7,6 @@ import { Badge } from '../components/Badge'
 export function TenantList() {
   const { data: tenants, isLoading } = useTenants()
   const create = useCreateTenant()
-  const [slug, setSlug] = useState('')
   const [name, setName] = useState('')
   const [cloneFrom, setCloneFrom] = useState('')
   const [err, setErr] = useState('')
@@ -25,14 +24,14 @@ export function TenantList() {
       </table>
       <form className="space-y-2 rounded-lg border bg-white p-4" onSubmit={e => {
         e.preventDefault(); setErr('')
-        create.mutate({ slug, name, cloneFrom: cloneFrom || undefined }, {
-          onSuccess: () => { setSlug(''); setName(''); setCloneFrom('') },
+        create.mutate({ name, cloneFrom: cloneFrom || undefined }, {
+          onSuccess: () => { setName(''); setCloneFrom('') },
           onError: er => setErr(er instanceof ApiError ? (er.fields?.map(f => `${f.field}: ${f.message}`).join('; ') || er.message) : 'error'),
         })
       }}>
         <h3 className="font-semibold">Create tenant</h3>
+        <p className="text-xs text-gray-500">The URL slug is generated from the name by the server.</p>
         <div className="flex flex-wrap gap-2">
-          <input className="rounded border px-2 py-1" placeholder="slug" value={slug} onChange={e => setSlug(e.target.value)} />
           <input className="rounded border px-2 py-1" placeholder="name" value={name} onChange={e => setName(e.target.value)} />
           <select className="rounded border px-2 py-1" value={cloneFrom} onChange={e => setCloneFrom(e.target.value)}>
             <option value="">(default config)</option>{tenants?.map(t => <option key={t.slug} value={t.slug}>clone: {t.slug}</option>)}

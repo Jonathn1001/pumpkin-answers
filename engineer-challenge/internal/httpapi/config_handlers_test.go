@@ -15,7 +15,7 @@ import (
 
 func TestSaveInvalidDraftReturns422(t *testing.T) {
 	svc := usecase.New(memory.New())
-	_, _ = svc.CreateTenant(context.Background(), "co", "Co", "")
+	_, _ = svc.CreateTenant(context.Background(), "Co", "")
 	r := httpapi.NewRouter(svc)
 	bad := seed.SafeGuard()
 	bad.SLA.DefaultDays = 0 // invalid
@@ -27,7 +27,7 @@ func TestSaveInvalidDraftReturns422(t *testing.T) {
 
 func TestRollbackEndpointRestoresConfig(t *testing.T) {
 	svc := usecase.New(memory.New())
-	_, _ = svc.CreateTenant(context.Background(), "co", "Co", "") // v1 default (tiered)
+	_, _ = svc.CreateTenant(context.Background(), "Co", "") // v1 default (tiered)
 	r := httpapi.NewRouter(svc)
 
 	w := doJSON(r, http.MethodPost, "/api/tenants/co/versions", map[string]any{"config": seed.GovHealth(), "note": "gov"})

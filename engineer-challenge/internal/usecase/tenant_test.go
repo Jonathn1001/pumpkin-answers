@@ -19,7 +19,7 @@ func TestDefaultDocumentIsValid(t *testing.T) {
 
 func TestCreateTenantStartsFromValidDefault(t *testing.T) {
 	svc := usecase.New(memory.New())
-	tn, err := svc.CreateTenant(context.Background(), "newco", "New Co", "")
+	tn, err := svc.CreateTenant(context.Background(), "New Co", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestCreateTenantStartsFromValidDefault(t *testing.T) {
 func TestUpdateTenantRejectsInvalidStatus(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	if _, err := svc.CreateTenant(ctx, "co", "Co", ""); err != nil {
+	if _, err := svc.CreateTenant(ctx, "Co", ""); err != nil {
 		t.Fatal(err)
 	}
 	_, err := svc.UpdateTenant(ctx, "co", "New", "banana")
@@ -44,7 +44,7 @@ func TestUpdateTenantRejectsInvalidStatus(t *testing.T) {
 func TestUpdateTenantAcceptsArchivedStatus(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	if _, err := svc.CreateTenant(ctx, "co", "Co", ""); err != nil {
+	if _, err := svc.CreateTenant(ctx, "Co", ""); err != nil {
 		t.Fatal(err)
 	}
 	tn, err := svc.UpdateTenant(ctx, "co", "Co", domain.TenantArchived)
@@ -56,16 +56,54 @@ func TestUpdateTenantAcceptsArchivedStatus(t *testing.T) {
 	}
 }
 
+func TestCreateTenantDerivesSlugFromName(t *testing.T) {
+	svc := usecase.New(memory.New())
+	tn, err := svc.CreateTenant(context.Background(), "SafeGuard Insurance", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tn.Slug != "safeguard-insurance" {
+		t.Fatalf("derived slug = %q, want %q", tn.Slug, "safeguard-insurance")
+	}
+}
+
+func TestCreateTenantAutoSuffixesDuplicateDerivedSlug(t *testing.T) {
+	svc := usecase.New(memory.New())
+	ctx := context.Background()
+	if _, err := svc.CreateTenant(ctx, "Acme", ""); err != nil {
+		t.Fatal(err)
+	}
+	tn, err := svc.CreateTenant(ctx, "Acme", "")
+	if err != nil {
+		t.Fatalf("second create should auto-suffix, got %v", err)
+	}
+	if tn.Slug != "acme-2" {
+		t.Fatalf("second slug = %q, want %q", tn.Slug, "acme-2")
+	}
+}
+
+func TestCreateTenantRejectsNameWithNoSlugChars(t *testing.T) {
+	svc := usecase.New(memory.New())
+	_, err := svc.CreateTenant(context.Background(), "@@@", "")
+	var ve domain.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected ValidationError, got %v", err)
+	}
+	if len(ve.Fields) == 0 || ve.Fields[0].Field != "name" {
+		t.Fatalf("expected validation on 'name', got %+v", ve.Fields)
+	}
+}
+
 func TestCreateTenantCloneCopiesSourceConfig(t *testing.T) {
 	svc := usecase.New(memory.New())
 	ctx := context.Background()
-	if _, err := svc.CreateTenant(ctx, "src", "Source", ""); err != nil {
+	if _, err := svc.CreateTenant(ctx, "Source", ""); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := svc.CreateTenant(ctx, "clone", "Clone", "src"); err != nil {
+	if _, err := svc.CreateTenant(ctx, "Clone", "source"); err != nil {
 		t.Fatal(err)
 	}
-	a, _ := svc.GetActiveConfig(ctx, "src")
+	a, _ := svc.GetActiveConfig(ctx, "source")
 	b, _ := svc.GetActiveConfig(ctx, "clone")
 	if a.Approval.Model != b.Approval.Model {
 		t.Fatal("clone should copy source config")

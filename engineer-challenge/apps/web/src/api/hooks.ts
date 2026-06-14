@@ -48,7 +48,7 @@ export const useConfigSchema = () =>
 export function useCreateTenant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (b: { slug: string; name: string; cloneFrom?: string }) =>
+    mutationFn: (b: { name: string; cloneFrom?: string }) =>
       request<Tenant>("POST", "/tenants", b),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.tenants }),
   });
