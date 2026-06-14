@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button, Descriptions, Space, Tag } from 'antd'
 import { EditOutlined } from '@ant-design/icons'
 import { useActiveConfig } from '../../api/hooks'
-import { claimTypeLabel } from '../../labels'
+import { claimTypeColor, claimTypeLabel } from '../../labels'
 
 // Read-only overview of the tenant's active published config. Editing happens on
 // the dedicated /tenants/:slug/edit page (the same stepped wizard as Create).
@@ -50,7 +50,7 @@ export function ConfigTab({ slug }: { slug: string }) {
           {enabledTypes.length ? (
             <Space size={[4, 4]} wrap>
               {enabledTypes.map((k) => (
-                <Tag key={k} style={{ marginInlineEnd: 0 }}>
+                <Tag key={k} color={claimTypeColor(k)} style={{ marginInlineEnd: 0 }}>
                   {claimTypeLabel(k)}
                 </Tag>
               ))}

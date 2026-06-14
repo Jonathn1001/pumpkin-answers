@@ -38,6 +38,17 @@ const CLAIM_TYPE_LABELS: Record<string, string> = {
   OPTICAL: 'Optical',
 }
 
+// Stable, visually-distinct antd Tag preset colors for the claim-type chips.
+const CLAIM_TYPE_COLORS: Record<string, string> = {
+  OUTPATIENT: 'blue',
+  INPATIENT: 'geekblue',
+  DENTAL: 'cyan',
+  MATERNITY: 'magenta',
+  OPTICAL: 'gold',
+}
+// Unknown keys hash into this palette so a new claim type still gets a consistent color.
+const CLAIM_TYPE_PALETTE = ['blue', 'geekblue', 'cyan', 'magenta', 'gold', 'green', 'volcano', 'purple']
+
 /** Friendly label for a notification event key (e.g. "claim_submitted"). */
 export const eventLabel = (key: string): string => EVENT_LABELS[key] ?? humanize(key)
 
@@ -46,6 +57,14 @@ export const dimensionLabel = (key: string): string => DIMENSION_LABELS[key] ?? 
 
 /** Friendly label for a claim-type key (e.g. "OUTPATIENT" -> "Outpatient"). */
 export const claimTypeLabel = (key: string): string => CLAIM_TYPE_LABELS[key] ?? humanize(key.toLowerCase())
+
+/** Stable antd Tag preset color for a claim-type key (e.g. "DENTAL" -> "cyan"). */
+export const claimTypeColor = (key: string): string => {
+  if (CLAIM_TYPE_COLORS[key]) return CLAIM_TYPE_COLORS[key]
+  let h = 0
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0
+  return CLAIM_TYPE_PALETTE[h % CLAIM_TYPE_PALETTE.length]
+}
 
 /**
  * Friendly breadcrumb for a dotted diff path like "branding.displayName" or

@@ -6,6 +6,7 @@ import { useConfigSchema, useCreateTenant, useTenants } from '../api/hooks'
 import { ApiError, request } from '../api/client'
 import { SchemaForm } from '../schemaform/SchemaForm'
 import { webhookRequired } from '../schemaform/conditional'
+import { claimTypeColor, claimTypeLabel } from '../labels'
 import type { ConfigDocument, FieldError, Tenant } from '../api/types'
 
 // One wizard step per config dimension, in display order. Each renders through
@@ -200,8 +201,8 @@ export function CreateTenant() {
                 {enabledTypes.length ? (
                   <Space size={[4, 4]} wrap>
                     {enabledTypes.map((k) => (
-                      <Tag key={k} style={{ marginInlineEnd: 0 }}>
-                        {k}
+                      <Tag key={k} color={claimTypeColor(k)} style={{ marginInlineEnd: 0 }}>
+                        {claimTypeLabel(k)}
                       </Tag>
                     ))}
                   </Space>
