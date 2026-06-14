@@ -32,3 +32,10 @@ func TestDefaultWhenNoOverride(t *testing.T) {
 		t.Fatalf("expected default 15, got %d", dec.SLADays)
 	}
 }
+
+func TestValidateRejectsZeroDefaultDays(t *testing.T) {
+	c := domain.ConfigDocument{SLA: domain.SLAConfig{DefaultDays: 0}}
+	if errs := sla.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: defaultDays must be >= 1")
+	}
+}

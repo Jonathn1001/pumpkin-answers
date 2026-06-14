@@ -52,3 +52,43 @@ func TestZeroThresholdNeverAutoApproves(t *testing.T) {
 		t.Fatalf("expected routed->committee, got %+v", dec.Approval)
 	}
 }
+
+func TestValidateAcceptsWellFormedTiers(t *testing.T) {
+	if errs := approval.New().Validate(tiered()); len(errs) != 0 {
+		t.Fatalf("expected valid tiered config, got %v", errs)
+	}
+}
+
+func TestValidateRejectsNonAscendingTiers(t *testing.T) {
+	c := domain.ConfigDocument{Approval: domain.ApprovalConfig{Model: domain.ApprovalModelTiered, Tiers: []domain.ApprovalTier{
+		{Label: "A", MaxAmount: ptr(50000)},
+		{Label: "B", MaxAmount: ptr(50000)},
+		{Label: "C", MaxAmount: nil},
+	}}}
+	if errs := approval.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: tier ceilings must be strictly ascending")
+	}
+}
+
+func TestValidateRequiresOpenEndedFinalTier(t *testing.T) {
+	c := domain.ConfigDocument{Approval: domain.ApprovalConfig{Model: domain.ApprovalModelTiered, Tiers: []domain.ApprovalTier{
+		{Label: "A", MaxAmount: ptr(50000)},
+	}}}
+	if errs := approval.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: final tier must be open-ended")
+	}
+}
+
+func TestValidateCommitteeRequiresApprovals(t *testing.T) {
+	c := domain.ConfigDocument{Approval: domain.ApprovalConfig{Model: domain.ApprovalModelCommittee, Committee: &domain.Committee{Name: "X", RequiredApprovals: 0}}}
+	if errs := approval.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: committee requiredApprovals >= 1")
+	}
+}
+
+func TestValidateRejectsUnknownModel(t *testing.T) {
+	c := domain.ConfigDocument{Approval: domain.ApprovalConfig{Model: "bogus"}}
+	if errs := approval.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: unknown approval model")
+	}
+}

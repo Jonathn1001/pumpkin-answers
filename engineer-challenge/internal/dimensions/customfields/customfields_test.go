@@ -38,3 +38,30 @@ func TestValidPasses(t *testing.T) {
 		t.Fatalf("expected valid, got %+v", dec.CustomFieldValidation.Errors)
 	}
 }
+
+func TestValidateDuplicateKey(t *testing.T) {
+	c := domain.ConfigDocument{CustomFields: []domain.CustomFieldConfig{
+		{Key: "a", Type: "string"}, {Key: "a", Type: "string"},
+	}}
+	if errs := customfields.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: duplicate key")
+	}
+}
+
+func TestValidateSelectNeedsOptions(t *testing.T) {
+	c := domain.ConfigDocument{CustomFields: []domain.CustomFieldConfig{
+		{Key: "a", Type: "select"},
+	}}
+	if errs := customfields.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: select field needs options")
+	}
+}
+
+func TestValidateEmptyKey(t *testing.T) {
+	c := domain.ConfigDocument{CustomFields: []domain.CustomFieldConfig{
+		{Key: "", Type: "string"},
+	}}
+	if errs := customfields.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: empty key")
+	}
+}

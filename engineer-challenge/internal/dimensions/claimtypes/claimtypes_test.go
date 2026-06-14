@@ -45,3 +45,12 @@ func TestUnknownTypeRejects(t *testing.T) {
 		t.Fatal("expected rejected for a claim type absent from config")
 	}
 }
+
+func TestValidateRejectsDocsOnDisabledType(t *testing.T) {
+	c := domain.ConfigDocument{ClaimTypes: map[domain.ClaimType]domain.ClaimTypeConfig{
+		domain.Dental: {Enabled: false, RequiredDocuments: []string{"receipt"}},
+	}}
+	if errs := claimtypes.New().Validate(c); len(errs) == 0 {
+		t.Fatal("expected error: required documents on a disabled claim type")
+	}
+}
