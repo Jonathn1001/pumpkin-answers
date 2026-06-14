@@ -15,6 +15,9 @@ type ConfigRef struct {
 }
 
 func (s *Service) ProcessClaim(ctx context.Context, slug string, claim domain.Claim) (domain.ClaimDecision, error) {
+	if errs := claim.Validate(); len(errs) > 0 {
+		return domain.ClaimDecision{}, domain.ValidationError{Fields: errs}
+	}
 	cfg, err := s.repo.GetActiveConfig(ctx, slug)
 	if err != nil {
 		return domain.ClaimDecision{}, err
@@ -25,6 +28,9 @@ func (s *Service) ProcessClaim(ctx context.Context, slug string, claim domain.Cl
 // PreviewClaim resolves config with precedence inline > version > active, runs the
 // engine, and persists nothing.
 func (s *Service) PreviewClaim(ctx context.Context, slug string, claim domain.Claim, version *int, inline *domain.ConfigDocument) (domain.ClaimDecision, error) {
+	if errs := claim.Validate(); len(errs) > 0 {
+		return domain.ClaimDecision{}, domain.ValidationError{Fields: errs}
+	}
 	cfg, err := s.resolve(ctx, ConfigRef{Slug: slug, Version: version}, inline)
 	if err != nil {
 		return domain.ClaimDecision{}, err
