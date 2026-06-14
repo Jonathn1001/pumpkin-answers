@@ -1,6 +1,7 @@
 import { Routes, Route, Link, Navigate } from 'react-router-dom'
 import { TenantList } from './pages/TenantList'
 import { TenantDetail } from './pages/TenantDetail'
+import { Compare } from './pages/Compare'
 
 export default function App() {
   return (
@@ -13,7 +14,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<TenantList />} />
           <Route path="/t/:slug" element={<TenantDetail />} />
-          <Route path="/compare" element={<div>Compare (Task 6)</div>} />
+          <Route path="/compare" element={<Compare />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
