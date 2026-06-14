@@ -13,8 +13,7 @@ A multi-tenant platform for **configuring** how insurance claims are handled per
 - [Configuration dimensions](#configuration-dimensions)
 - [Project structure](#project-structure)
 - [Getting started](#getting-started)
-- [API reference](#api-reference)
-- [Demo walkthrough (UI)](#demo-walkthrough-ui)
+- [Demo walkthrough](#demo-walkthrough)
 - [Testing](#testing)
 - [Conventions & design notes](#conventions--design-notes)
 
