@@ -53,6 +53,17 @@ export function useCreateTenant() {
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.tenants }),
   });
 }
+export function useUpdateTenant(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (b: { name?: string; status?: string }) =>
+      request<Tenant>("PATCH", `/tenants/${slug}`, b),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.tenants });
+      qc.invalidateQueries({ queryKey: keys.tenant(slug) });
+    },
+  });
+}
 export function useSaveDraft(slug: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -97,6 +108,12 @@ export function usePreview(slug: string) {
       versionNumber?: number;
       config?: ConfigDocument;
     }) => request<ClaimDecision>("POST", `/tenants/${slug}/preview`, b),
+  });
+}
+export function useProcess(slug: string) {
+  return useMutation({
+    mutationFn: (claim: Claim) =>
+      request<ClaimDecision>("POST", `/tenants/${slug}/process`, claim),
   });
 }
 export function useDiff() {
