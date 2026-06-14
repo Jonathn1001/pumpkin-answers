@@ -53,14 +53,14 @@ export function useCreateTenant() {
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.tenants }),
   });
 }
-export function useUpdateTenant(slug: string) {
+export function useUpdateTenantMeta() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (b: { name: string; status?: string }) =>
-      request<Tenant>("PATCH", `/tenants/${slug}`, b),
-    onSuccess: () => {
+    mutationFn: (b: { slug: string; name: string; status?: string }) =>
+      request<Tenant>("PATCH", `/tenants/${b.slug}`, { name: b.name, status: b.status }),
+    onSuccess: (_d, b) => {
       qc.invalidateQueries({ queryKey: keys.tenants });
-      qc.invalidateQueries({ queryKey: keys.tenant(slug) });
+      qc.invalidateQueries({ queryKey: keys.tenant(b.slug) });
     },
   });
 }
