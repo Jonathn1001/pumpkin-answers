@@ -15,7 +15,6 @@ A multi-tenant platform for **configuring** how insurance claims are handled per
 - [Getting started](#getting-started)
 - [Demo walkthrough](#demo-walkthrough)
 - [Testing](#testing)
-- [Conventions & design notes](#conventions--design-notes)
 
 ---
 
@@ -243,13 +242,3 @@ npm run typecheck
 npm run build
 npx playwright test    # smoke test (apps/web/tests/smoke.spec.ts)
 ```
-
----
-
-## Conventions & design notes
-
-- **Config is the single source of truth.** The struct definitions drive the JSON Schema (`invopop/jsonschema`), the UI form, the validator and the engine — they cannot drift apart.
-- **Library-first.** Diffing uses `r3labs/diff`; schema generation uses `invopop/jsonschema`; migrations use `golang-migrate` (embedded via `embed.FS`). No hand-rolled equivalents.
-- **Thin handlers.** All HTTP→status mapping lives in one place (`httpapi.fail`); domain errors (`ValidationError`, `ErrTenantNotFound`, `ErrSlugTaken`, …) map to `422/404/409`.
-- **Slugs are server-authoritative** and Unicode-aware: `"Phòng khám Đa khoa"` → `"phong-kham-da-khoa"`. Collisions get `-2`, `-3`, … suffixes.
-- **Security defaults:** proxy headers are untrusted by default, request bodies are capped at 1 MiB, and **secrets are never logged** (the `DATABASE_URL` is deliberately kept out of all log lines).

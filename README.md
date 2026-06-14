@@ -2,6 +2,8 @@
 
 Repo này là bài nộp cho thử thách của **Pumpkin**, gồm **2 phần** nằm trong 2 thư mục con. README này chỉ mô tả sơ qua — chi tiết của mỗi phần xem trong README riêng của thư mục đó.
 
+> 🔗 **Live demo (engineer-challenge):** https://pumpkin-answers-production.up.railway.app — UI ở `/`, API ở `/api`, health ở `/healthz`.
+
 | Thư mục | Phần | Nội dung |
 | --- | --- | --- |
 | [`engineer-challenge/`](./engineer-challenge/README.md) | Bài coding | Nền tảng cấu hình & xử lý claims bảo hiểm đa tenant |
@@ -12,6 +14,8 @@ Repo này là bài nộp cho thử thách của **Pumpkin**, gồm **2 phần** 
 ## 1. `engineer-challenge/` — Bài coding
 
 Một nền tảng **đa tenant** để **cấu hình** cách xử lý claims bảo hiểm cho từng tenant, và **chạy** claims qua một decision engine điều khiển hoàn toàn bằng config. Mỗi tenant có một cấu hình được **đánh version** trải trên 6 khía cạnh (branding, loại claim, luồng duyệt, thông báo, SLA, custom fields) — chính config mà admin UI chỉnh sửa cũng là thứ engine thực thi.
+
+**🔗 Live demo:** [pumpkin-answers-production.up.railway.app](https://pumpkin-answers-production.up.railway.app) — deploy thật trên Railway (1 service Go + Postgres), seed sẵn 3 tenant mẫu.
 
 - **Backend:** Go 1.25 + Gin + GORM/Postgres
 - **Frontend:** React 19 + Ant Design 6 + Vite
