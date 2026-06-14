@@ -2,6 +2,8 @@ module claimsplatform
 
 go 1.25.6
 
+toolchain go1.25.11
+
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
