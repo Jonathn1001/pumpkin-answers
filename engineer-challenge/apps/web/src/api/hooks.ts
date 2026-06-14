@@ -56,7 +56,7 @@ export function useCreateTenant() {
 export function useUpdateTenant(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (b: { name?: string; status?: string }) =>
+    mutationFn: (b: { name: string; status?: string }) =>
       request<Tenant>("PATCH", `/tenants/${slug}`, b),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.tenants });
