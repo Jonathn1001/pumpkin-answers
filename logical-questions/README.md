@@ -28,3 +28,15 @@ Với người lớn tuổi, hay phụ nữ có thai, người khuyết tật ho
 Câu này khi đọc vào tôi nghĩ ngay đến ly uống bia, nhưng đó chỉ là hình ảnh đầu tiên hiện ra chứ tôi không thấy nó hợp lý cho việc uống bia, sau khi đọc phần mô tả đi kèm thì tôi lại nhớ về việc ướp bia. Mỗi dịp nhà có đám tiệc thì tôi được giao nhiệm vụ đi mua nước đá, bỏ bia vào thùng, đổ đá lên rồi đổ thêm nước lạnh vào ngâm trước khi nhập tiệc. Vậy câu trả lời của tôi là bia trước.
 
 ## 7. Viết hướng dẫn đổ xăng tại cây xăng nhanh nhất có thể
+
+Khi đi đổ xăng thì tôi nhận ra lúc bơm thật ra rất nhanh — thứ làm mất thời gian lại là hàng chờ, lúc loay hoay mở nắp bình và lúc móc tiền trả. Vì vậy nguyên tắc của tôi là: việc gì làm trước được thì làm trước, và tranh thủ làm song song trong lúc nhân viên đang bơm.
+
+1. **Trước khi muốn ghé đổ xăng thì tính sẵn trong đầu hai thứ: đổ bao nhiêu và trả bằng gì.** Tôi chốt luôn "đầy bình" hay "100 ngàn", và sẽ trả tiền mặt hay quét QR. Lý do để bước này trước: chuẩn bị trước luôn
+
+2. **Chọn trụ vắng nhất** Xe máy nhỏ và linh hoạt, lợi thế lớn nhất là né được hàng chờ — mà chờ mới là phần ngốn thời gian thật sự, không phải lúc bơm. Tôi tấp vào sao cho phía nắp bình quay về phía vòi bơm để nhân viên tiện tay nhất.
+
+3. **Vừa dừng xe thì làm liền theo thứ tự: tắt máy → gạt chân chống → mở nắp bình → hô luôn câu đã chốt từ trước ("Đổ em 100 ngàn!").** Tắt máy mở nắp bình trước khi nhân viên bước tới là mấu chốt: để họ vừa tới là cắm vòi bơm được ngay, không phải chờ mình loay hoay. Nói trước đổ bao nhiêu để nhân viên không phải hỏi lại.
+
+4. **Trong lúc nhân viên đang bơm — mình tranh thủ chuẩn bị thanh toán.** Bơm xe máy chỉ chừng dưới 1 phút là xong, nếu để bơm xong mới móc ví hay mở app thì chính khâu trả tiền lại thành chỗ kẹt mới. Nên tôi rút sẵn tờ tiền đúng mệnh giá, hoặc mở sẵn app và bật camera quét QR ngay từ lúc này.
+
+5. **Vòi vừa rút ra là trả tiền ngay, đóng nắp bình, rồi mới đề máy đi.** Thao tác nhanh gọn lẹ thì sẽ đỡ tốn thời gian cho mình.
