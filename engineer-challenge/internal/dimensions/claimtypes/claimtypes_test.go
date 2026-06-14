@@ -54,3 +54,29 @@ func TestValidateRejectsDocsOnDisabledType(t *testing.T) {
 		t.Fatal("expected error: required documents on a disabled claim type")
 	}
 }
+
+func TestZeroEnabledTypesFails(t *testing.T) {
+	cfg := domain.ConfigDocument{ClaimTypes: map[domain.ClaimType]domain.ClaimTypeConfig{
+		domain.Outpatient: {Enabled: false},
+	}}
+	errs := claimtypes.New().Validate(cfg)
+	found := false
+	for _, e := range errs {
+		if e.Field == "claimTypes" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected a claimTypes error when zero types enabled, got %v", errs)
+	}
+}
+
+func TestDefaultConfigEnablesOutpatient(t *testing.T) {
+	def, ok := claimtypes.New().DefaultConfig().(map[domain.ClaimType]domain.ClaimTypeConfig)
+	if !ok {
+		t.Fatalf("DefaultConfig wrong type: %T", claimtypes.New().DefaultConfig())
+	}
+	if !def[domain.Outpatient].Enabled {
+		t.Fatal("expected OUTPATIENT enabled by default so a new tenant is processable")
+	}
+}

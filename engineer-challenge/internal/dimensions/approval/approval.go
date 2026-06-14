@@ -56,6 +56,9 @@ func (dimension) Evaluate(cfg domain.ConfigDocument, claim domain.Claim, dec *do
 func (dimension) Validate(cfg domain.ConfigDocument) []domain.FieldError {
 	var errs []domain.FieldError
 	a := cfg.Approval
+	if a.AutoApproveThreshold < 0 {
+		errs = append(errs, domain.FieldError{Field: "approval.autoApproveThreshold", Message: "must be >= 0"})
+	}
 	switch a.Model {
 	case domain.ApprovalModelTiered:
 		if len(a.Tiers) == 0 {

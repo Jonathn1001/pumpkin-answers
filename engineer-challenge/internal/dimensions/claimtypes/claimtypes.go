@@ -35,13 +35,20 @@ func (dimension) Evaluate(cfg domain.ConfigDocument, claim domain.Claim, dec *do
 
 func (dimension) Validate(cfg domain.ConfigDocument) []domain.FieldError {
 	var errs []domain.FieldError
+	enabled := 0
 	for ctype, c := range cfg.ClaimTypes {
+		if c.Enabled {
+			enabled++
+		}
 		if !c.Enabled && len(c.RequiredDocuments) > 0 {
 			errs = append(errs, domain.FieldError{
 				Field:   fmt.Sprintf("claimTypes.%s.requiredDocuments", ctype),
 				Message: "required documents set on a disabled claim type",
 			})
 		}
+	}
+	if enabled == 0 {
+		errs = append(errs, domain.FieldError{Field: "claimTypes", Message: "at least one claim type must be enabled"})
 	}
 	return errs
 }
@@ -51,6 +58,7 @@ func (dimension) DefaultConfig() any {
 	for _, t := range domain.AllClaimTypes() {
 		m[t] = domain.ClaimTypeConfig{Enabled: false, RequiredDocuments: []string{}}
 	}
+	m[domain.Outpatient] = domain.ClaimTypeConfig{Enabled: true, RequiredDocuments: []string{"receipt"}}
 	return m
 }
 

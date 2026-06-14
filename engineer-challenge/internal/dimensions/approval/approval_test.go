@@ -92,3 +92,19 @@ func TestValidateRejectsUnknownModel(t *testing.T) {
 		t.Fatal("expected error: unknown approval model")
 	}
 }
+
+func TestNegativeThresholdFails(t *testing.T) {
+	cfg := domain.ConfigDocument{Approval: domain.ApprovalConfig{
+		AutoApproveThreshold: -1, Model: "tiered",
+		Tiers: []domain.ApprovalTier{{Label: "Open", MaxAmount: nil, ApproverRole: "manager"}}}}
+	errs := approval.New().Validate(cfg)
+	found := false
+	for _, e := range errs {
+		if e.Field == "approval.autoApproveThreshold" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected autoApproveThreshold error for negative value, got %v", errs)
+	}
+}
