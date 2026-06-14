@@ -1,60 +1,68 @@
 import { useState } from 'react'
+import { Button, ColorPicker, Input, InputNumber, Select, Space, Switch, Typography } from 'antd'
 import type { WidgetProps } from './types'
 
 export function FieldLabel({ p }: { p: WidgetProps }) {
   return (
-    <div className="mb-1 text-sm font-medium">
-      {p.descriptor.label}{p.descriptor.required && <span className="text-red-600"> *</span>}
-      {p.errors.map((e, i) => <span key={i} className="ml-2 text-xs text-red-600">{e.message}</span>)}
+    <div style={{ marginBottom: 4 }}>
+      <Typography.Text strong>{p.descriptor.label}</Typography.Text>
+      {p.descriptor.required && <Typography.Text type="danger"> *</Typography.Text>}
+      {p.errors.map((e, i) => (
+        <Typography.Text key={i} type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+          {e.message}
+        </Typography.Text>
+      ))}
     </div>
   )
 }
 
 export function TextInput(p: WidgetProps) {
   return (
-    <label className="block">
+    <div>
       <FieldLabel p={p} />
-      <input className="w-full rounded border px-2 py-1" value={(p.value as string) ?? ''} onChange={e => p.onChange(e.target.value)} />
-    </label>
+      <Input value={(p.value as string) ?? ''} onChange={(e) => p.onChange(e.target.value)} />
+    </div>
   )
 }
 
 export function NumberInput(p: WidgetProps) {
   return (
-    <label className="block">
+    <div>
       <FieldLabel p={p} />
-      <input type="number" className="w-full rounded border px-2 py-1" value={(p.value as number) ?? 0} onChange={e => p.onChange(Number(e.target.value))} />
-    </label>
+      <InputNumber style={{ width: '100%' }} value={(p.value as number) ?? 0} onChange={(v) => p.onChange(v ?? 0)} />
+    </div>
   )
 }
 
 export function Toggle(p: WidgetProps) {
   return (
-    <label className="flex items-center gap-2">
-      <input type="checkbox" checked={Boolean(p.value)} onChange={e => p.onChange(e.target.checked)} />
-      <span className="text-sm font-medium">{p.descriptor.label}</span>
-    </label>
+    <Space>
+      <Switch checked={Boolean(p.value)} onChange={(v) => p.onChange(v)} />
+      <Typography.Text>{p.descriptor.label}</Typography.Text>
+    </Space>
   )
 }
 
-export function Select(p: WidgetProps) {
+export function SelectInput(p: WidgetProps) {
   return (
-    <label className="block">
+    <div>
       <FieldLabel p={p} />
-      <select className="w-full rounded border px-2 py-1" value={(p.value as string) ?? ''} onChange={e => p.onChange(e.target.value)}>
-        <option value="" disabled>Select…</option>
-        {(p.descriptor.options ?? []).map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </label>
+      <Select
+        style={{ width: '100%' }}
+        value={(p.value as string) || undefined}
+        onChange={(v) => p.onChange(v)}
+        options={(p.descriptor.options ?? []).map((o) => ({ value: o, label: o }))}
+      />
+    </div>
   )
 }
 
 export function ColorInput(p: WidgetProps) {
   return (
-    <label className="block">
+    <div>
       <FieldLabel p={p} />
-      <input type="color" value={(p.value as string) || '#000000'} onChange={e => p.onChange(e.target.value)} />
-    </label>
+      <ColorPicker value={(p.value as string) || '#000000'} onChange={(_, hex) => p.onChange(hex)} showText />
+    </div>
   )
 }
 
@@ -63,30 +71,60 @@ export function LogoInput(p: WidgetProps) {
   const [brokenUrl, setBrokenUrl] = useState('')
   const showImg = url !== '' && url !== brokenUrl
   return (
-    <label className="block">
+    <div>
       <FieldLabel p={p} />
-      <div className="flex items-center gap-3">
+      <Space>
         {showImg ? (
-          <img src={url} alt="logo preview" className="h-12 w-12 rounded border object-contain" onError={() => setBrokenUrl(url)} />
+          <img
+            src={url}
+            alt="logo preview"
+            style={{ height: 40, width: 40, objectFit: 'contain', border: '1px solid #eee', borderRadius: 4 }}
+            onError={() => setBrokenUrl(url)}
+          />
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded border text-center text-[10px] text-gray-400">
+          <div
+            style={{
+              height: 40,
+              width: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid #eee',
+              borderRadius: 4,
+              fontSize: 10,
+              color: '#aaa',
+            }}
+          >
             {url ? 'invalid' : 'no logo'}
           </div>
         )}
-        <input className="flex-1 rounded border px-2 py-1" placeholder="https://…" value={url} onChange={e => p.onChange(e.target.value)} />
-        {url && <button type="button" className="text-sm text-blue-700" onClick={() => p.onChange('')}>Remove</button>}
-      </div>
-    </label>
+        <Input style={{ width: 280 }} placeholder="https://…" value={url} onChange={(e) => p.onChange(e.target.value)} />
+        {url && (
+          <Button type="link" onClick={() => p.onChange('')}>
+            Remove
+          </Button>
+        )}
+      </Space>
+    </div>
   )
 }
 
 export function FallbackWidget(p: WidgetProps) {
   return (
-    <label className="block">
+    <div>
       <FieldLabel p={p} />
-      <textarea key={JSON.stringify(p.value)} className="w-full rounded border px-2 py-1 font-mono text-xs" rows={4}
+      <Input.TextArea
+        rows={4}
         defaultValue={JSON.stringify(p.value, null, 2)}
-        onBlur={e => { try { p.onChange(JSON.parse(e.target.value)) } catch { /* ignore invalid json */ } }} />
-    </label>
+        onBlur={(e) => {
+          try {
+            p.onChange(JSON.parse(e.target.value))
+          } catch {
+            /* ignore invalid json */
+          }
+        }}
+        style={{ fontFamily: 'monospace', fontSize: 12 }}
+      />
+    </div>
   )
 }
